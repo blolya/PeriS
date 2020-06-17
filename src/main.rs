@@ -2,7 +2,7 @@
 #![no_main]
 
 use cortex_m_rt::entry;
-use panic_persist as _;
+use panic_reset as _;
 
 #[entry]
 fn main() -> ! {
