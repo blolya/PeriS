@@ -1,4 +1,22 @@
-use super::{Gpio, Peripherals};
+use super::super::core::Register;
+use super::Peripherals;
+
+pub struct Gpio {
+    address: u32,
+    pub crl: Register,
+    pub crh: Register,
+    pub bsrr: Register,
+}
+impl Gpio {
+    pub fn new(address: u32) -> Gpio {
+        Gpio {
+            address,
+            crl: Register::new(address),
+            crh: Register::new(address + 0x04),
+            bsrr: Register::new(address + 0x10),
+        }
+    }
+}
 
 pub struct Port {
     port_num: u32,
