@@ -1,3 +1,5 @@
+pub mod gpio;
+
 use super::core::Register;
 
 pub struct Peripherals {
