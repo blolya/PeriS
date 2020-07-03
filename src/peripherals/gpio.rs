@@ -1,5 +1,4 @@
 use super::super::core::Register;
-use super::Peripherals;
 
 pub struct Gpio {
     address: u32,
@@ -67,7 +66,8 @@ pub struct Ports {
 }
 
 pub fn gpioc() -> Ports {
-    let Peripherals { rcc, gpioc } = super::take();
+    let rcc = super::rcc::Rcc::new();
+    let gpioc = Gpio::new(0x4001_1000);
 
     rcc.enable_iopc();
 
