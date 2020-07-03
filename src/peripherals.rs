@@ -45,9 +45,6 @@ impl Gpio {
             bsrr: Register::new(address + 0x10),
         }
     }
-    fn crl(&self) -> &Register {
-        &self.crl
-    }
 }
 
 pub fn take() -> Peripherals {
