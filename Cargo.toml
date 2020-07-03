@@ -1,8 +1,8 @@
 [package]
-name = "peris"
-version = "0.1.0"
 authors = ["Dzyunka <mast-94@mail.ru>"]
 edition = "2018"
+name = "peris"
+version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -11,11 +11,16 @@ cortex-m-rt = "0.6.12"
 panic-reset = "0.1.0"
 
 [[bin]]
+bench = false
 name = "peris"
 test = false
+[lib]
 bench = false
+name = "peris"
+path = "src/lib.rs"
+test = false
 
 [profile.release]
-codegen-units = 1 
+codegen-units = 1
 debug = true
 lto = true
