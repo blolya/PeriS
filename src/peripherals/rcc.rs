@@ -14,6 +14,9 @@ impl Rcc {
     }
 
     pub fn enable_iopc(&self) {
-        self.apb2enr.write(0x0000_0010);
+        self.apb2enr.write_or(0x0000_0010);
+    }
+    pub fn disable_iopc(&self) {
+        self.apb2enr.write_and(0x1111_11E1);
     }
 }

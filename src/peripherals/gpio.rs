@@ -1,4 +1,28 @@
 use super::super::core::Register;
+use super::rcc::Rcc;
+
+pub enum PortType {
+    A,
+    B,
+    C,
+    D,
+    E,
+}
+
+struct Gpioc;
+impl Clocked for Gpioc {
+    fn enable_clock(&self) {
+        Rcc::new().enable_iopc();
+    }
+    fn disable_clock(&self) {
+        Rcc::new().disable_iopc();
+    }
+}
+
+pub trait Clocked {
+    fn enable_clock(&self);
+    fn disable_clock(&self);
+}
 
 pub struct Gpio {
     address: u32,
@@ -7,7 +31,8 @@ pub struct Gpio {
     pub bsrr: Register,
 }
 impl Gpio {
-    pub fn new(address: u32) -> Gpio {
+    pub fn new(address: u32, port_type: impl Clocked) -> Gpio {
+        port_type.enable_clock();
         Gpio {
             address,
             crl: Register::new(address),
@@ -60,17 +85,20 @@ impl Port {
         cr.write_or(speed << shift_num * 4);
     }
 }
-
+impl Drop for Port {
+    fn drop(&mut self) {
+        self.set_low();
+        self.set_mode(0);
+        self.set_speed(0);
+    }
+}
 pub struct Ports {
-    pub pc13: Port,
+    pub p13: Port,
 }
 
 pub fn gpioc() -> Ports {
-    let rcc = super::rcc::Rcc::new();
-    let gpioc = Gpio::new(0x4001_1000);
+    let gpioc = Gpio::new(0x4001_1000, Gpioc);
 
-    rcc.enable_iopc();
-
-    let pc13 = Port::new(13, gpioc);
-    Ports { pc13 }
+    let p13 = Port::new(13, gpioc);
+    Ports { p13 }
 }

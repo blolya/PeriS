@@ -8,7 +8,11 @@ use peris::peripherals::gpio;
 
 #[entry]
 fn main() -> ! {
-    let pc13 = gpio::gpioc().pc13;
+    let pc = gpio::gpioc();
+    let pc13 = &pc.p13;
+    pc13.set_mode(0);
+    pc13.set_speed(2);
     pc13.set_high();
+
     loop {}
 }
