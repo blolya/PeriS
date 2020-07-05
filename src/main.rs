@@ -4,15 +4,13 @@
 use cortex_m_rt::entry;
 use panic_reset as _;
 
-use peris::peripherals::gpio;
+use peris::peripherals::gpio::{Gpio, Gpioc};
 
 #[entry]
 fn main() -> ! {
-    let pc = gpio::gpioc();
-    let pc13 = &pc.p13;
-    pc13.set_mode(0);
-    pc13.set_speed(2);
-    pc13.set_high();
-
+    let gpioc = Gpioc::new();
+    gpioc.set_port_mode(13, 0);
+    gpioc.set_port_speed(13, 2);
+    gpioc.set_port_high(13);
     loop {}
 }
