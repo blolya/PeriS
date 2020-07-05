@@ -1,14 +1,16 @@
-use core::ptr;
-
 pub struct Register {
-    address: u32,
+    address: *mut u32,
 }
 impl Register {
     pub fn new(address: u32) -> Register {
-        Register { address }
+        Register {
+            address: address as *mut u32,
+        }
     }
     pub fn write(&self, value: u32) {
-        unsafe { ptr::write_volatile(self.address as *mut u32, value) }
+        unsafe {
+            *self.address = value;
+        }
     }
     pub fn write_and(&self, value: u32) {
         let old_value = self.read();
@@ -21,7 +23,7 @@ impl Register {
     pub fn read(&self) -> u32 {
         let value;
         unsafe {
-            value = ptr::read_volatile(self.address as *mut u32);
+            value = *self.address;
         }
         value
     }
