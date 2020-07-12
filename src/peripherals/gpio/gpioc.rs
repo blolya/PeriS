@@ -43,10 +43,10 @@ impl Gpio for Gpioc {
             shift_num = port;
         };
 
-        cr.write_and(!(0b11 << 2 + shift_num * 4));
-        cr.write_or(mode << 2 + shift_num * 4);
+        cr.write_and(!(0b11 << shift_num * 4));
+        cr.write_or(mode << shift_num * 4);
     }
-    fn set_port_speed(&self, port: u32, speed: u32) {
+    fn get_port_mode(&self, port: u32) -> u32 {
         let cr;
         let shift_num;
         if port > 7 {
@@ -57,8 +57,36 @@ impl Gpio for Gpioc {
             shift_num = port;
         };
 
-        cr.write_and(!(0b11 << shift_num * 4));
-        cr.write_or(speed << shift_num * 4);
+        let mode = cr.read() & 0b11 << shift_num * 4;
+        mode >> shift_num * 4
+    }
+    fn set_port_config(&self, port: u32, config: u32) {
+        let cr;
+        let shift_num;
+        if port > 7 {
+            cr = &self.crh;
+            shift_num = port - 8;
+        } else {
+            cr = &self.crl;
+            shift_num = port;
+        };
+
+        cr.write_and(!(0b11 << 2 + shift_num * 4));
+        cr.write_or(config << 2 + shift_num * 4);
+    }
+    fn get_port_config(&self, port: u32) -> u32 {
+        let cr;
+        let shift_num;
+        if port > 7 {
+            cr = &self.crh;
+            shift_num = port - 8;
+        } else {
+            cr = &self.crl;
+            shift_num = port;
+        };
+
+        let config = cr.read() & 0b11 << 2 + shift_num * 4;
+        config >> 2 + shift_num * 4
     }
 }
 
