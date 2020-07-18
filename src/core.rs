@@ -27,4 +27,14 @@ impl Register {
         }
         value
     }
+    pub fn set_bit(&self, bit: u32) {
+        self.write_or(0b1 << bit);
+    }
+    pub fn reset_bit(&self, bit: u32) {
+        self.write_and(!(0b1 << bit));
+    }
+    pub fn get_bit(&self, bit: u32) -> u32 {
+        let value = self.read() & 0b1 << bit;
+        value >> bit
+    }
 }
