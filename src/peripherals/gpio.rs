@@ -7,6 +7,7 @@ pub trait Gpio: Clocked {
     fn set_port_config(&self, port: u32, config: u32);
     fn get_port_config(&self, port: u32) -> u32;
     fn set_port_output(&self, port: u32);
+    fn write_port_output(&self, port: u32, value: u32);
     fn reset_port_output(&self, port: u32);
     fn get_port_output(&self, port: u32) -> u32;
     fn get_port_input(&self, port: u32) -> u32;
@@ -40,16 +41,21 @@ impl<'a, T: Gpio> Port<'a, T> {
         }
     }
     pub fn set_port_type(&self, port_type: PortType) {
-        let (bin_config, bin_speed) = port_type.into();
+        let (bin_config, bin_speed, bin_odr) = port_type.into();
+        
         let port_num: u32 = (&self.port_num).into();
         self.gpio.set_port_config(port_num, bin_config);
         self.gpio.set_port_mode(port_num, bin_speed);
+        self.gpio.write_port_output(port_num, bin_odr);
     }
     pub fn get_port_type(&self) -> PortType {
         let port_num: u32 = (&self.port_num).into();
+
         let bin_config = self.gpio.get_port_config(port_num);
         let bin_mode = self.gpio.get_port_mode(port_num);
-        let mode: PortType = (bin_config, bin_mode).into();
+        let bin_odr = self.gpio.get_port_output(port_num);
+
+        let mode: PortType = (bin_config, bin_mode, bin_odr).into();
         mode
     }
 }
@@ -60,18 +66,18 @@ pub enum OutputConfig {
     AlternativeFunctionPushPull(PortMode),
     AlternativeFunctionOpenDrain(PortMode),
 }
-impl From<OutputConfig> for (u32, u32) {
-    fn from(config: OutputConfig) -> (u32, u32) {
+impl From<OutputConfig> for (u32, u32, u32) {
+    fn from(config: OutputConfig) -> (u32, u32, u32) {
         match config {
-            OutputConfig::GeneralPurposePushPull(speed) => (0, speed as u32),
-            OutputConfig::GeneralPurposeOpenDrain(speed) => (1, speed as u32),
-            OutputConfig::AlternativeFunctionPushPull(speed) => (2, speed as u32),
-            OutputConfig::AlternativeFunctionOpenDrain(speed) => (3, speed as u32),
+            OutputConfig::GeneralPurposePushPull(speed) => (0, speed as u32, 0),
+            OutputConfig::GeneralPurposeOpenDrain(speed) => (1, speed as u32, 0),
+            OutputConfig::AlternativeFunctionPushPull(speed) => (2, speed as u32, 0),
+            OutputConfig::AlternativeFunctionOpenDrain(speed) => (3, speed as u32, 0),
         }
     }
 }
-impl From<(u32, u32)> for OutputConfig {
-    fn from( (bin_config, bin_mode): (u32, u32) ) -> OutputConfig {
+impl From<(u32, u32, u32)> for OutputConfig {
+    fn from( (bin_config, bin_mode, bin_odr): (u32, u32, u32) ) -> OutputConfig {
         let speed: PortMode = bin_mode.into();
         match bin_config {
             0 => OutputConfig::GeneralPurposePushPull(speed),
@@ -88,22 +94,28 @@ pub enum InputConfig {
     PullDown,
     PullUp,
 }
-impl From<InputConfig> for (u32, u32) {
-    fn from(config: InputConfig) -> (u32, u32) {
+impl From<InputConfig> for (u32, u32, u32) {
+    fn from(config: InputConfig) -> (u32, u32, u32) {
         match config {
-            InputConfig::Analog => (0, 0),
-            InputConfig::Floating => (1, 0),
-            InputConfig::PullDown => (2, 0),
-            InputConfig::PullUp => (2, 0),   
+            InputConfig::Analog => (0, 0, 0),
+            InputConfig::Floating => (1, 0, 0),
+            InputConfig::PullDown => (2, 0, 0),
+            InputConfig::PullUp => (2, 0, 1),   
         }
     }
 }
-impl From <(u32, u32)> for InputConfig {
-    fn from( (bin_config, _): (u32, u32) ) -> InputConfig {
+impl From <(u32, u32, u32)> for InputConfig {
+    fn from( (bin_config, _, bin_odr): (u32, u32, u32) ) -> InputConfig {
         match bin_config {
             0 => InputConfig::Analog,
             1 => InputConfig::Floating,
-            2 => InputConfig::PullDown,
+            2 => {
+                match bin_odr {
+                    0 => InputConfig::PullDown,
+                    1 => InputConfig::PullUp,
+                    _ => panic!(""),
+                }
+            }
             _ => panic!("")
         }
     }
@@ -112,8 +124,8 @@ pub enum PortType {
     Input(InputConfig),
     Output(OutputConfig),
 }
-impl From<PortType> for (u32, u32) {
-    fn from(port_type: PortType) -> (u32, u32) {
+impl From<PortType> for (u32, u32, u32) {
+    fn from(port_type: PortType) -> (u32, u32, u32) {
         match port_type {
             PortType::Input(config) => {
                 config.into()
@@ -124,13 +136,13 @@ impl From<PortType> for (u32, u32) {
         }
     }
 }
-impl From<(u32, u32)> for PortType {
-    fn from( (bin_config, bin_mode): (u32, u32) ) -> PortType {
+impl From<(u32, u32, u32)> for PortType {
+    fn from( (bin_config, bin_mode, bin_odr): (u32, u32, u32) ) -> PortType {
         if bin_mode == 0 {
-            let config: InputConfig = (bin_config, bin_mode).into();
+            let config: InputConfig = (bin_config, bin_mode, bin_odr).into();
             PortType::Input(config)
         } else {
-            let config: OutputConfig = (bin_config, bin_mode).into();
+            let config: OutputConfig = (bin_config, bin_mode, bin_odr).into();
             PortType::Output(config)
         }
     }

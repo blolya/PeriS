@@ -27,6 +27,13 @@ impl Register {
         }
         value
     }
+    pub fn write_bit(&self, bit: u32, value: u32) {
+        match value {
+            0 => self.reset_bit(bit),
+            1 => self.set_bit(bit),
+            _ => panic!("Bit value can be 0 or 1"),
+        }
+    }
     pub fn set_bit(&self, bit: u32) {
         self.write_or(0b1 << bit);
     }

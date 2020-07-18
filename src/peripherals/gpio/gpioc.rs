@@ -72,9 +72,11 @@ impl Gpio for Gpioc {
         let config = cr.read() & 0b11 << 2 + shift_num * 4;
         config >> 2 + shift_num * 4
     }
-
     fn set_port_output(&self, port: u32) {
         self.odr.set_bit(port);
+    }
+    fn write_port_output(&self, port: u32, value: u32) {
+        self.odr.write_bit(port, value);
     }
     fn reset_port_output(&self, port: u32) {
         self.brr.set_bit(port);
