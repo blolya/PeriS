@@ -28,49 +28,25 @@ impl Gpioc {
 }
 
 impl Gpio for Gpioc {
-    fn set_port_mode(&self, port: u32, mode: u32) {
-        let (cr, shift_num) = 
-        if port > 7 { 
-            (&self.crh, port - 8) 
-        } 
-        else { 
-            (&self.crl, port) 
-        };
-        cr.write_and(!(0b11 << shift_num * 4));
-        cr.write_or(mode << shift_num * 4);
-    }
-    fn get_port_mode(&self, port: u32) -> u32 {
-        let (cr, shift_num) = 
-        if port > 7 { 
-            (&self.crh, port - 8) 
-        } 
-        else { 
-            (&self.crl, port) 
-        };
-        let mode = cr.read() & 0b11 << shift_num * 4;
-        mode >> shift_num * 4
-    }
     fn set_port_config(&self, port: u32, config: u32) {
-        let (cr, shift_num) = 
-        if port > 7 { 
-            (&self.crh, port - 8) 
-        } 
-        else { 
-            (&self.crl, port) 
-        };
+        let (cr, shift_num) = self.select_cr_and_shift_value(port);
         cr.write_and(!(0b11 << 2 + shift_num * 4));
         cr.write_or(config << 2 + shift_num * 4);
     }
     fn get_port_config(&self, port: u32) -> u32 {
-        let (cr, shift_num) = 
-        if port > 7 { 
-            (&self.crh, port - 8) 
-        } 
-        else { 
-            (&self.crl, port) 
-        };
+        let (cr, shift_num) = self.select_cr_and_shift_value(port);
         let config = cr.read() & 0b11 << 2 + shift_num * 4;
         config >> 2 + shift_num * 4
+    }
+    fn set_port_mode(&self, port: u32, mode: u32) {
+        let (cr, shift_num) = self.select_cr_and_shift_value(port);
+        cr.write_and(!(0b11 << shift_num * 4));
+        cr.write_or(mode << shift_num * 4);
+    }
+    fn get_port_mode(&self, port: u32) -> u32 {
+        let (cr, shift_num) = self.select_cr_and_shift_value(port);
+        let mode = cr.read() & 0b11 << shift_num * 4;
+        mode >> shift_num * 4
     }
     fn set_port_output(&self, port: u32) {
         self.odr.set_bit(port);
@@ -86,6 +62,14 @@ impl Gpio for Gpioc {
     }
     fn get_port_input(&self, port: u32) -> u32 {
         self.idr.get_bit(port)
+    }
+    fn select_cr_and_shift_value(&self, port: u32) -> (&Register, u32) {
+        if port > 7 { 
+            (&self.crh, port - 8) 
+        } 
+        else { 
+            (&self.crl, port) 
+        }
     }
 }
 
