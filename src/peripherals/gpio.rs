@@ -13,5 +13,5 @@ pub trait Gpio: Clocked {
     fn reset_port_output(&self, port: u32);
     fn get_port_output(&self, port: u32) -> u32;
     fn get_port_input(&self, port: u32) -> u32;
-    fn select_cr_and_shift_value(&self, port: u32) -> (&Register, u32);
+    fn select_port_cr_and_shift_num(&self, port: u32) -> (&Register, u32);
 }
