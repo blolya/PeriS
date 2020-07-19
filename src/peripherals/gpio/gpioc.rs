@@ -29,6 +29,7 @@ impl Gpioc {
 
 impl Gpio for Gpioc {
     fn set_port_config(&self, port: u32, config: u32) {
+        let config = config & 0x0000_0003;
         let (cr, shift_num) = self.select_port_cr_and_shift_num(port);
         cr.write_and(!(0b11 << 2 + shift_num * 4));
         cr.write_or(config << 2 + shift_num * 4);
@@ -39,6 +40,7 @@ impl Gpio for Gpioc {
         config >> 2 + shift_num * 4
     }
     fn set_port_mode(&self, port: u32, mode: u32) {
+        let mode = mode & 0x0000_0003;
         let (cr, shift_num) = self.select_port_cr_and_shift_num(port);
         cr.write_and(!(0b11 << shift_num * 4));
         cr.write_or(mode << shift_num * 4);

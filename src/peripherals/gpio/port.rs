@@ -100,7 +100,7 @@ impl From<(u32, u32, u32)> for OutputConfig {
             1 => OutputConfig::GeneralPurposeOpenDrain(speed),
             2 => OutputConfig::AlternativeFunctionPushPull(speed),
             3 => OutputConfig::AlternativeFunctionOpenDrain(speed),
-            _ => panic!(""),
+            _ => panic!("Output config can be 0, 1, 2 or 3"),
         }
     }
 }
@@ -129,10 +129,10 @@ impl From <(u32, u32)> for InputConfig {
                 match gpio_odr {
                     0 => InputConfig::PullDown,
                     1 => InputConfig::PullUp,
-                    _ => panic!(""),
+                    _ => panic!("Gpio odr value for input config can only be 0 or 1"),
                 }
             }
-            _ => panic!("")
+            _ => panic!("Input config can be 0, 1 or 2"),
         }
     }
 }
@@ -148,7 +148,7 @@ impl From<u32> for MaxSpeed {
             1 => MaxSpeed::S10MHz,
             2 => MaxSpeed::S2MHz,
             3 => MaxSpeed::S50MHz,
-            _ => panic!(""),
+            _ => panic!("Max speed can be 1, 2 or 3"),
         }
     }
 }
@@ -176,7 +176,7 @@ impl From<u32> for PortNum {
     fn from(port_num: u32) -> PortNum {
         match port_num {
             13 => PortNum::P13,
-            _ => panic!("Hey"),
+            _ => panic!(""),
         }
     }
 }
