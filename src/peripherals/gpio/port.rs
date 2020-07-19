@@ -29,11 +29,11 @@ impl<'a, T: Gpio> Port<'a, T> {
         }
     }
     pub fn set_port_type(&self, port_type: Type) {
-        let (bin_config, bin_speed, bin_odr) = port_type.into();
+        let (bin_config, bin_mode, bin_odr) = port_type.into();
         
         let port_num: u32 = (&self.port_num).into();
         self.gpio.set_port_config(port_num, bin_config);
-        self.gpio.set_port_mode(port_num, bin_speed);
+        self.gpio.set_port_mode(port_num, bin_mode);
         self.gpio.write_port_output(port_num, bin_odr);
     }
     pub fn get_port_type(&self) -> Type {
@@ -67,7 +67,7 @@ impl From<Type> for (u32, u32, u32) {
 impl From<(u32, u32, u32)> for Type {
     fn from( (bin_config, bin_mode, bin_odr): (u32, u32, u32) ) -> Type {
         if bin_mode == 0 {
-            let config: InputConfig = (bin_config, bin_mode, bin_odr).into();
+            let config: InputConfig = (bin_config, bin_odr).into();
             Type::Input(config)
         } else {
             let config: OutputConfig = (bin_config, bin_mode, bin_odr).into();
@@ -77,10 +77,10 @@ impl From<(u32, u32, u32)> for Type {
 }
 
 pub enum OutputConfig {
-    GeneralPurposePushPull(Mode),
-    GeneralPurposeOpenDrain(Mode),
-    AlternativeFunctionPushPull(Mode),
-    AlternativeFunctionOpenDrain(Mode),
+    GeneralPurposePushPull(MaxSpeed),
+    GeneralPurposeOpenDrain(MaxSpeed),
+    AlternativeFunctionPushPull(MaxSpeed),
+    AlternativeFunctionOpenDrain(MaxSpeed),
 }
 impl From<OutputConfig> for (u32, u32, u32) {
     fn from(config: OutputConfig) -> (u32, u32, u32) {
@@ -94,7 +94,7 @@ impl From<OutputConfig> for (u32, u32, u32) {
 }
 impl From<(u32, u32, u32)> for OutputConfig {
     fn from( (bin_config, bin_mode, _): (u32, u32, u32) ) -> OutputConfig {
-        let speed: Mode = bin_mode.into();
+        let speed: MaxSpeed = bin_mode.into();
         match bin_config {
             0 => OutputConfig::GeneralPurposePushPull(speed),
             1 => OutputConfig::GeneralPurposeOpenDrain(speed),
@@ -120,8 +120,8 @@ impl From<InputConfig> for (u32, u32, u32) {
         }
     }
 }
-impl From <(u32, u32, u32)> for InputConfig {
-    fn from( (bin_config, _, bin_odr): (u32, u32, u32) ) -> InputConfig {
+impl From <(u32, u32)> for InputConfig {
+    fn from( (bin_config, bin_odr): (u32, u32) ) -> InputConfig {
         match bin_config {
             0 => InputConfig::Analog,
             1 => InputConfig::Floating,
@@ -137,19 +137,17 @@ impl From <(u32, u32, u32)> for InputConfig {
     }
 }
 
-pub enum Mode {
-    Reserved = 0,
+pub enum MaxSpeed {
     S2MHz = 2,
     S10MHz = 1,
     S50MHz = 3,
 }
-impl From<u32> for Mode {
-    fn from(bin_speed: u32) -> Mode {
+impl From<u32> for MaxSpeed {
+    fn from(bin_speed: u32) -> MaxSpeed {
         match bin_speed {
-            0 => Mode::Reserved,
-            1 => Mode::S10MHz,
-            2 => Mode::S2MHz,
-            3 => Mode::S50MHz,
+            1 => MaxSpeed::S10MHz,
+            2 => MaxSpeed::S2MHz,
+            3 => MaxSpeed::S50MHz,
             _ => panic!(""),
         }
     }
