@@ -154,29 +154,87 @@ impl From<u32> for MaxSpeed {
 }
 
 pub enum PortNum {
+    P0,
+    P1,
+    P2,
+    P3,
+    P4,
+    P5,
+    P6,
+    P7,
+    P8,
+    P9,
+    P10,
+    P11,
+    P12,
     P13,
+    P14,
+    P15,
 }
 impl From<PortNum> for u32 {
     fn from(port_num: PortNum) -> u32 {
         match port_num {
+            PortNum::P0 => 0,
+            PortNum::P1 => 1,
+            PortNum::P2 => 2,
+            PortNum::P3 => 3,
+            PortNum::P4 => 4,
+            PortNum::P5 => 5,
+            PortNum::P6 => 6,
+            PortNum::P7 => 7,
+            PortNum::P8 => 8,
+            PortNum::P9 => 9,
+            PortNum::P10 => 10,
+            PortNum::P11 => 11,
+            PortNum::P12 => 12,
             PortNum::P13 => 13,
-            _ => panic!(""),
+            PortNum::P14 => 14,
+            PortNum::P15 => 15,
         }
     }
 }
 impl From<&PortNum> for u32 {
     fn from(port_num: &PortNum) -> u32 {
         match port_num {
+            PortNum::P0 => 0,
+            PortNum::P1 => 1,
+            PortNum::P2 => 2,
+            PortNum::P3 => 3,
+            PortNum::P4 => 4,
+            PortNum::P5 => 5,
+            PortNum::P6 => 6,
+            PortNum::P7 => 7,
+            PortNum::P8 => 8,
+            PortNum::P9 => 9,
+            PortNum::P10 => 10,
+            PortNum::P11 => 11,
+            PortNum::P12 => 12,
             PortNum::P13 => 13,
-            _ => panic!(""),
+            PortNum::P14 => 14,
+            PortNum::P15 => 15,
         }
     }
 }
 impl From<u32> for PortNum {
     fn from(port_num: u32) -> PortNum {
         match port_num {
+            0 => PortNum::P0,
+            1 => PortNum::P1,
+            2 => PortNum::P2,
+            3 => PortNum::P3,
+            4 => PortNum::P4,
+            5 => PortNum::P5,
+            6 => PortNum::P6,
+            7 => PortNum::P7,
+            8 => PortNum::P8,
+            9 => PortNum::P9,
+            10 => PortNum::P10,
+            11 => PortNum::P11,
+            12 => PortNum::P12,
             13 => PortNum::P13,
-            _ => panic!(""),
+            14 => PortNum::P14,
+            15 => PortNum::P15,
+            _ => panic!("Port num out of bounds. Max = 15"),
         }
     }
 }
