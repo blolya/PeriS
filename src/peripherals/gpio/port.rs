@@ -1,77 +1,77 @@
 use super::Gpio;
 
 pub struct Port<'a, T: Gpio> {
-    port_num: Num,
+    port_num: PortNum,
     gpio: &'a T,
 }
 impl<'a, T: Gpio> Port<'a, T> {
-    pub fn new(port_num: Num, port_type: Type, gpio: &'a T) -> Port<'a, T> {
+    pub fn new(port_num: PortNum, port_mode: PortMode, gpio: &'a T) -> Port<'a, T> {
         let port = Port { port_num, gpio };
-        port.set_port_type(port_type);
+        port.set_mode(port_mode);
         port
     }
     pub fn set_high(&self) {
-        let port_type = self.get_port_type();
+        let port_mode = self.get_mode();
         let port_num: u32 = (&self.port_num).into();
-        if let Type::Input(_) = port_type {
+        if let PortMode::Input(_) = port_mode {
             panic!("Port {} is in input mode. Consider to change port mode to output.", port_num);
         } else {
             self.gpio.set_port_output(port_num);
         }
     }
     pub fn set_low(&self) {
-        let port_type = self.get_port_type();
+        let port_mode = self.get_mode();
         let port_num: u32 = (&self.port_num).into();
-        if let Type::Input(_) = port_type {
+        if let PortMode::Input(_) = port_mode {
             panic!("Port {} is in input mode. Consider to change port mode to output.", port_num);
         } else {
             self.gpio.reset_port_output(port_num);
         }
     }
-    pub fn set_port_type(&self, port_type: Type) {
-        let (bin_config, bin_mode, bin_odr) = port_type.into();
+    pub fn set_mode(&self, port_mode: PortMode) {
+        let (gpio_config, gpio_mode, gpio_odr) = port_mode.into();
         
         let port_num: u32 = (&self.port_num).into();
-        self.gpio.set_port_config(port_num, bin_config);
-        self.gpio.set_port_mode(port_num, bin_mode);
-        self.gpio.write_port_output(port_num, bin_odr);
+        self.gpio.set_port_config(port_num, gpio_config);
+        self.gpio.set_port_mode(port_num, gpio_mode);
+        self.gpio.write_port_output(port_num, gpio_odr);
     }
-    pub fn get_port_type(&self) -> Type {
+    pub fn get_mode(&self) -> PortMode {
         let port_num: u32 = (&self.port_num).into();
 
-        let bin_config = self.gpio.get_port_config(port_num);
-        let bin_mode = self.gpio.get_port_mode(port_num);
-        let bin_odr = self.gpio.get_port_output(port_num);
+        let gpio_config = self.gpio.get_port_config(port_num);
+        let gpio_mode = self.gpio.get_port_mode(port_num);
+        let gpio_odr = self.gpio.get_port_output(port_num);
 
-        let port_type: Type = (bin_config, bin_mode, bin_odr).into();
-        port_type
+        let port_mode: PortMode = (gpio_config, gpio_mode, gpio_odr).into();
+        port_mode
     }
 }
 
-pub enum Type {
+pub enum PortMode {
     Input(InputConfig),
     Output(OutputConfig),
 }
-impl From<Type> for (u32, u32, u32) {
-    fn from(port_type: Type) -> (u32, u32, u32) {
-        match port_type {
-            Type::Input(config) => {
+impl From<PortMode> for (u32, u32, u32) {
+    fn from(port_mode: PortMode) -> (u32, u32, u32) {
+        match port_mode {
+            PortMode::Input(config) => {
                 config.into()
             },
-            Type::Output(config) => {
+            PortMode::Output(config) => {
                 config.into()
             }
         }
     }
 }
-impl From<(u32, u32, u32)> for Type {
-    fn from( (bin_config, bin_mode, bin_odr): (u32, u32, u32) ) -> Type {
-        if bin_mode == 0 {
-            let config: InputConfig = (bin_config, bin_odr).into();
-            Type::Input(config)
+impl From<(u32, u32, u32)> for PortMode {
+    fn from( (gpio_config, gpio_mode, gpio_odr): (u32, u32, u32) ) -> PortMode {
+        if gpio_mode == 0 {
+            let config: InputConfig = (gpio_config, gpio_odr).into();
+            PortMode::Input(config)
         } else {
-            let config: OutputConfig = (bin_config, bin_mode, bin_odr).into();
-            Type::Output(config)
+            let config: OutputConfig = (gpio_config, gpio_mode, gpio_odr).into();
+            PortMode::Output(config)
         }
     }
 }
@@ -93,9 +93,9 @@ impl From<OutputConfig> for (u32, u32, u32) {
     }
 }
 impl From<(u32, u32, u32)> for OutputConfig {
-    fn from( (bin_config, bin_mode, _): (u32, u32, u32) ) -> OutputConfig {
-        let speed: MaxSpeed = bin_mode.into();
-        match bin_config {
+    fn from( (gpio_config, gpio_mode, _): (u32, u32, u32) ) -> OutputConfig {
+        let speed: MaxSpeed = gpio_mode.into();
+        match gpio_config {
             0 => OutputConfig::GeneralPurposePushPull(speed),
             1 => OutputConfig::GeneralPurposeOpenDrain(speed),
             2 => OutputConfig::AlternativeFunctionPushPull(speed),
@@ -121,12 +121,12 @@ impl From<InputConfig> for (u32, u32, u32) {
     }
 }
 impl From <(u32, u32)> for InputConfig {
-    fn from( (bin_config, bin_odr): (u32, u32) ) -> InputConfig {
-        match bin_config {
+    fn from( (gpio_config, gpio_odr): (u32, u32) ) -> InputConfig {
+        match gpio_config {
             0 => InputConfig::Analog,
             1 => InputConfig::Floating,
             2 => {
-                match bin_odr {
+                match gpio_odr {
                     0 => InputConfig::PullDown,
                     1 => InputConfig::PullUp,
                     _ => panic!(""),
@@ -153,29 +153,29 @@ impl From<u32> for MaxSpeed {
     }
 }
 
-pub enum Num {
+pub enum PortNum {
     P13,
 }
-impl From<Num> for u32 {
-    fn from(port_num: Num) -> u32 {
+impl From<PortNum> for u32 {
+    fn from(port_num: PortNum) -> u32 {
         match port_num {
-            Num::P13 => 13,
+            PortNum::P13 => 13,
             _ => panic!(""),
         }
     }
 }
-impl From<&Num> for u32 {
-    fn from(port_num: &Num) -> u32 {
+impl From<&PortNum> for u32 {
+    fn from(port_num: &PortNum) -> u32 {
         match port_num {
-            Num::P13 => 13,
+            PortNum::P13 => 13,
             _ => panic!(""),
         }
     }
 }
-impl From<u32> for Num {
-    fn from(port_num: u32) -> Num {
+impl From<u32> for PortNum {
+    fn from(port_num: u32) -> PortNum {
         match port_num {
-            13 => Num::P13,
+            13 => PortNum::P13,
             _ => panic!("Hey"),
         }
     }
