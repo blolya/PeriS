@@ -1,3 +1,5 @@
+pub mod gpioa;
+pub mod gpiob;
 pub mod gpioc;
 pub mod port;
 

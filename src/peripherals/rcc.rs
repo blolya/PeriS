@@ -11,10 +11,22 @@ impl Rcc {
         }
     }
 
+    pub fn enable_iopa(&self) {
+        self.apb2enr.write_or(0x0000_0004);
+    }
+    pub fn disable_iopa(&self) {
+        self.apb2enr.write_and(0xFFFF_FFFD);
+    }
+    pub fn enable_iopb(&self) {
+        self.apb2enr.write_or(0x0000_0008);
+    }
+    pub fn disable_iopb(&self) {
+        self.apb2enr.write_and(0xFFFF_FFF7);
+    }
     pub fn enable_iopc(&self) {
         self.apb2enr.write_or(0x0000_0010);
     }
     pub fn disable_iopc(&self) {
-        self.apb2enr.write_and(0x1111_11E1);
+        self.apb2enr.write_and(0xFFFF_FFEF);
     }
 }
