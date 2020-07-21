@@ -14,3 +14,5 @@ Cargo.lock
 
 /target
 .vscode
+src/peripherals/communication.rs
+src/peripherals/communication/
