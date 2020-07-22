@@ -4,15 +4,19 @@
 use cortex_m_rt::entry;
 use panic_reset as _;
 
-use peris::peripherals::rcc::{ Rcc, SystemClock };
+use peris::peripherals::rcc::{ Rcc, SystemClock, Hse, Pll };
 use peris::core::Register;
 
 #[entry]
 fn main() -> ! {
 
-    let system_clock = SystemClock::new();
-    let system_clock_source = system_clock.get_source();
+    let hse = Hse::new();
+    let pll = Pll::new();
+    pll.set_multiplication_factor(12);
+    pll.set_source(hse);
 
+    let system_clock = SystemClock::new();
+    system_clock.set_source(pll);
 
     // let rcc = Rcc::new();
     // rcc.cr.set_bit(16);
