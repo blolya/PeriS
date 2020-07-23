@@ -4,45 +4,25 @@
 use cortex_m_rt::entry;
 use panic_reset as _;
 
-use peris::peripherals::rcc::{ Rcc, SystemClock, Hse, Pll };
-use peris::core::Register;
+use peris::peripherals::rcc::{ Rcc, SystemClock, Hse, Pll, PllMul, Apb1Prescaler };
+use peris::peripherals::communication::uart::{ Uart, usart1::Usart1 };
 
 #[entry]
 fn main() -> ! {
 
     let hse = Hse::new();
     let pll = Pll::new();
-    pll.set_multiplication_factor(12);
+    pll.set_multiplication_factor(PllMul::Pllx9);
     pll.set_source(hse);
 
     let system_clock = SystemClock::new();
+    system_clock.set_apb1_prescaler(Apb1Prescaler::Db2);
     system_clock.set_source(pll);
 
-    // let rcc = Rcc::new();
-    // rcc.cr.set_bit(16);
-    // let mut hse_status = rcc.cr.get_bit(17);
-    // while hse_status == 0 {
-    //     hse_status = rcc.cr.get_bit(17);
-    // };
-    // rcc.cfgr.write_or(0x001C_0000); 
-    // rcc.cfgr.set_bit(16);
-    // rcc.cr.set_bit(24);
-    // let mut pll_status = rcc.cr.get_bit(25);
-    // while pll_status == 0 {
-    //     pll_status = rcc.cr.get_bit(25);
-    // };
-
-    // let flash_register = Register::new(0x4002_2000);
-    // flash_register.write_or(0x0000_0002);
-
-    // rcc.cfgr.write_or(0x0000_0400);
-    // rcc.cfgr.write_or(0x0000_0002);
-
-    // let mut pll_clock_status = rcc.cfgr.read() & 0x0000_0003;
-    // while pll_clock_status != 2 {
-    //     pll_clock_status = rcc.cfgr.read() & 0x0000_0003;
-    // };
-
+    let ua1 = Usart1::new();
+    let arr: () = "Ku\r".as_bytes().iter().map( |c| {
+        ua1.send(*c);
+    }).collect();
 
     loop {}
 }

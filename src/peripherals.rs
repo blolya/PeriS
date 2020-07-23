@@ -1,6 +1,6 @@
 pub mod gpio;
 pub mod rcc;
-
+pub mod communication;
 
 pub trait Device {
     fn enable(&self);
