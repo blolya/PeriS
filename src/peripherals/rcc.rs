@@ -18,47 +18,79 @@ impl Rcc {
 
     // Clock section
     pub fn set_system_clock_source(&self, system_clock: u32) {
-        self.cfgr.write_and(!0x0000_0003);
-        self.cfgr.write_or(system_clock);
+        self.cfgr.write_or( (self.cfgr.read() & !0x3) | system_clock );
     }
     pub fn get_system_clock_source(&self) -> u32 {
         let status = self.cfgr.read();
-        (status & 0x0000_000C) >> 2
+        (status & 0xC) >> 2
     }
 
+    // Hsi 
+    pub fn enable_hsi(&self) {
+        self.cr.set_bit(0);
+    }
+    pub fn disable_hsi(&self) {
+        self.cr.reset_bit(0);
+    }
+    pub fn get_hsi_ready_status(&self) {
+        self.cr.get_bit(1);
+    }
+
+    // Hse
     pub fn enable_hse(&self) {
         self.cr.set_bit(16);
+    }
+    pub fn disable_hse(&self) {
+        self.cr.reset_bit(16);
     }
     pub fn get_hse_ready_status(&self) -> u32 {
         self.cr.get_bit(17)
     }
 
+    // Pll
     pub fn enable_pll(&self) {
-        self.cr.set_bit(24)
+        self.cr.set_bit(24);
+    }
+    pub fn disable_pll(&self) {
+        self.cr.reset_bit(24);
     }
     pub fn get_pll_ready_status(&self) -> u32 {
         self.cr.get_bit(25)
     }
-    pub fn set_pll_source_clock(&self, source: u32) {
+    pub fn set_pll_clock_source(&self, source: u32) {
         self.cfgr.write_bit(16, source)
     }
-    pub fn get_pll_source_clock(&self) -> u32 {
+    pub fn get_pll_clock_source(&self) -> u32 {
         self.cfgr.get_bit(16)
     }
     pub fn set_pll_multiplication_factor(&self, factor: u32) {
-        self.cfgr.write_and( !0x003C_0000 );
-        self.cfgr.write_or(factor << 18);
+        self.cfgr.write( (self.cfgr.read() & !(0xF << 18)) | (factor << 18) );
     }
     pub fn get_pll_multiplication_factor(&self) -> u32 {
         let factor = (self.cfgr.read() >> 18) & 0xF;
         factor
     }
+
+    // Prescalers 
+    pub fn set_ahb_prescaler(&self, prescaler: u32) {
+        self.cfgr.write( (self.cfgr.read() & !(0xF << 4)) | (prescaler << 4) );
+    }
+    pub fn get_ahb_prescaler(&self) -> u32 {
+        let prescaler = (self.cfgr.read() >> 4) & 0xF;
+        prescaler
+    }
     pub fn set_apb1_prescaler(&self, prescaler: u32) {
-        self.cfgr.write_and(!0x0000_0700);
-        self.cfgr.write_or(prescaler << 8);
+        self.cfgr.write( (self.cfgr.read() & !(0x7 << 8)) | (prescaler << 8) );
     }
     pub fn get_apb1_prescaler(&self) -> u32 {
         let prescaler = (self.cfgr.read() >> 8) & 0x7;
+        prescaler
+    }
+    pub fn set_apb2_prescaler(&self, prescaler: u32) {
+        self.cfgr.write( (self.cfgr.read() & !(0x7 << 11)) | (prescaler << 11) );
+    }
+    pub fn get_apb2_prescaler(&self) -> u32 {
+        let prescaler = (self.cfgr.read() >> 11) & 0x7;
         prescaler
     }
 
@@ -173,7 +205,7 @@ impl Pll {
     pub fn set_source(&self, source: impl PllClockSource) {
         source.enable();
         let bin_source: u32 = source.into();
-        self.rcc.set_pll_source_clock(bin_source)
+        self.rcc.set_pll_clock_source(bin_source)
     }
     pub fn get_source(&self) -> impl PllClockSource {
         Hse::new()

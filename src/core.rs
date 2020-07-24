@@ -20,6 +20,10 @@ impl Register {
         let old_value = self.read();
         self.write(value | old_value);
     }
+    pub fn write_xor(&self, value: u32) {
+        let old_value = self.read();
+        self.write(value ^ old_value);
+    }
     pub fn read(&self) -> u32 {
         let value;
         unsafe {
@@ -27,12 +31,9 @@ impl Register {
         }
         value
     }
-    pub fn write_bit(&self, bit: u32, value: u32) {
-        match value {
-            0 => self.write_and(!(0b1 << bit)),
-            1 => self.write_or(0b1 << bit),
-            _ => panic!("Bit value can be 0 or 1"),
-        }
+    pub fn write_bit(&self, bit: u32, bit_value: u32) {
+        let new_register_value = (self.read() & !(0b1 << bit)) | ( (bit_value & 0b1) << bit);
+        self.write(new_register_value);
     }
     pub fn set_bit(&self, bit: u32) {
         self.write_bit(bit, 1);
