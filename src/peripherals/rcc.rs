@@ -58,7 +58,7 @@ impl Rcc {
         self.cr.get_bit(25)
     }
     pub fn set_pll_clock_source(&self, source: u32) {
-        self.cfgr.write_bit(16, source)
+        self.cfgr.write_bit(16, source);
     }
     pub fn get_pll_clock_source(&self) -> u32 {
         self.cfgr.get_bit(16)
@@ -139,15 +139,31 @@ impl SystemClock {
             rcc: Rcc::new(),
         }
     }
-    pub fn set_source(&self, source: impl ClockSource) {
+    pub fn set_source(&self, source: impl SystemClockSource) {
         source.enable();
-        let bin_source: u32 = source.into();
         let flash_register = Register::new(0x4002_2000);
         flash_register.write_or(0x0000_0002);
+
+        let bin_source: u32 = source.into();
         self.rcc.set_system_clock_source(bin_source);
+
+        let mut clock_source = self.rcc.get_system_clock_source();
+        let mut cycles = 0;
+        while clock_source != bin_source {
+            clock_source = self.rcc.get_system_clock_source();
+
+            cycles += 1;
+            if cycles > 100 {
+                panic!("Unable to switch system clock source");
+            }
+        }
     }
-    pub fn get_source(&self) -> impl ClockSource {
-        Hse::new()
+    pub fn get_source(&self) -> impl SystemClockSource {
+        match self.rcc.get_system_clock_source() {
+            1 => Hse::new(),
+            2 => Pll::new(),
+            _ => panic!("Clock not defined"),
+        }
     }
     pub fn set_apb1_prescaler(&self, prescaler: Apb1Prescaler) {
         self.rcc.set_apb1_prescaler(prescaler as u32);
@@ -158,33 +174,72 @@ impl SystemClock {
     }
 }
 
+pub enum Apb1Prescaler {
+    Db2 = 4,
+}
+impl From<u32> for Apb1Prescaler {
+    fn from(prescaler: u32) -> Apb1Prescaler {
+        match prescaler {
+            4 => Apb1Prescaler::Db2,
+            _ => panic!(""),
+        }
+    }
+}
 
 pub struct Hse {
     rcc: Rcc,
+    input_frequency: u32,
 }
 impl Hse {
     pub fn new() -> Hse {
         Hse {
             rcc: Rcc::new(),
+            input_frequency: 8,
         }
     }
 }
-impl ClockSource for Hse {
+impl SystemClockSource for Hse {
 
 }
 impl PllClockSource for Hse {
 
 }
+impl ClockSource for Hse {
+    fn get_input_frequency(&self) -> u32 {
+        self.input_frequency
+    }
+    fn get_output_frequency(&self) -> u32 {
+        self.input_frequency
+    }
+}
 impl Device for Hse {
     fn enable(&self) {
         self.rcc.enable_hse();
         let mut hse_ready_status = self.rcc.get_hse_ready_status();
+
+        let mut cycles = 0;
         while hse_ready_status == 0 {
             hse_ready_status = self.rcc.get_hse_ready_status();
+    
+            cycles += 1;
+            if cycles > 100 {
+                panic!("Unable to enable Hse");
+            }
         }
     } 
     fn disable(&self) {
-        
+        self.rcc.disable_hse();
+        let mut hse_ready_status = self.rcc.get_hse_ready_status();
+
+        let mut cycles = 0;
+        while hse_ready_status == 1 {
+            hse_ready_status = self.rcc.get_hse_ready_status();
+
+            cycles += 1;
+            if cycles > 100 {
+                panic!("Unable to disable Hse");
+            }
+        }
     }
 }
 impl From<Hse> for u32 {
@@ -205,10 +260,14 @@ impl Pll {
     pub fn set_source(&self, source: impl PllClockSource) {
         source.enable();
         let bin_source: u32 = source.into();
-        self.rcc.set_pll_clock_source(bin_source)
+        self.rcc.set_pll_clock_source(bin_source);
     }
     pub fn get_source(&self) -> impl PllClockSource {
-        Hse::new()
+        let source = self.rcc.get_pll_clock_source();
+        match source {
+            1 => Hse::new(),
+            _ => panic!(""),
+        }
     }
     pub fn set_multiplication_factor(&self, factor: PllMul) {
         self.rcc.set_pll_multiplication_factor(factor as u32);
@@ -218,19 +277,46 @@ impl Pll {
         factor
     }
 }
-impl ClockSource for Pll {
+impl SystemClockSource for Pll {
 
+}
+impl ClockSource for Pll {
+    fn get_input_frequency(&self) -> u32 {
+        let clock_source = self.get_source();
+        clock_source.get_output_frequency()
+    }
+    fn get_output_frequency(&self) -> u32 {
+        self.get_input_frequency() * self.get_pll_multiplication_factor() as u32
+    }
 }
 impl Device for Pll {
     fn enable(&self) {
         self.rcc.enable_pll();
         let mut pll_ready_status = self.rcc.get_pll_ready_status();
+
+        let mut cycles = 0;
         while pll_ready_status == 0 {
             pll_ready_status = self.rcc.get_pll_ready_status();
+
+            cycles += 1;
+            if cycles > 100 {
+                panic!("Unable to enable Pll");
+            }
         }
     } 
     fn disable(&self) {
-        
+        self.rcc.disable_pll();
+        let mut pll_ready_status = self.rcc.get_pll_ready_status();
+
+        let mut cycles = 0;
+        while pll_ready_status == 1 {
+            pll_ready_status = self.rcc.get_pll_ready_status();
+
+            cycles += 1;
+            if cycles > 100 {
+                panic!("Unable to disable Pll");
+            }
+        }
     }
 }
 impl From<Pll> for u32 {
@@ -238,14 +324,6 @@ impl From<Pll> for u32 {
         2
     }
 }
-
-pub trait ClockSource: Device + Into<u32> {
-
-}
-pub trait PllClockSource: Device + Into<u32> {
-
-}
-
 pub enum PllMul {
     Pllx9 = 7,
 }
@@ -258,14 +336,14 @@ impl From<u32> for PllMul {
     }
 }
 
-pub enum Apb1Prescaler {
-    Db2 = 4,
+pub trait SystemClockSource: ClockSource {
+
 }
-impl From<u32> for Apb1Prescaler {
-    fn from(prescaler: u32) -> Apb1Prescaler {
-        match prescaler {
-            4 => Apb1Prescaler::Db2,
-            _ => panic!(""),
-        }
-    }
+pub trait PllClockSource:  ClockSource {
+
+}
+
+pub trait ClockSource: Device + Into<u32> {
+    fn get_input_frequency(&self) -> u32;
+    fn get_output_frequency(&self) -> u32;
 }
