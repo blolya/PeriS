@@ -139,15 +139,23 @@ impl SystemClock {
             rcc: Rcc::new(),
         }
     }
-    pub fn set_source(&self, source: impl SystemClockSource) {
-        source.enable();
+    pub fn set_source(&self, source: SystemClockSource) {
+        let bin_source: u32 = (&source).into();
+        match source {
+            SystemClockSource::Hsi => panic!("Hsi not implemented"),
+            SystemClockSource::Hse(clock_source) => {
+                clock_source.enable();
+            },
+            SystemClockSource::Pll(clock_source) => {
+                clock_source.enable();
+            },
+        }
         let flash_register = Register::new(0x4002_2000);
         flash_register.write_or(0x0000_0002);
 
-        let bin_source: u32 = source.into();
         self.rcc.set_system_clock_source(bin_source);
 
-        let mut clock_source = self.rcc.get_system_clock_source();
+        let mut clock_source: u32 = (&self.get_source()).into();
         let mut cycles = 0;
         while clock_source != bin_source {
             clock_source = self.rcc.get_system_clock_source();
@@ -158,10 +166,11 @@ impl SystemClock {
             }
         }
     }
-    pub fn get_source(&self) -> impl SystemClockSource {
+    pub fn get_source(&self) -> SystemClockSource {
         match self.rcc.get_system_clock_source() {
-            1 => Hse::new(),
-            2 => Pll::new(),
+            0 => SystemClockSource::Hsi,
+            1 => SystemClockSource::Hse(Hse::new()),
+            2 => SystemClockSource::Pll(Pll::new()),
             _ => panic!("Clock not defined"),
         }
     }
@@ -197,12 +206,6 @@ impl Hse {
             input_frequency: 8,
         }
     }
-}
-impl SystemClockSource for Hse {
-
-}
-impl PllClockSource for Hse {
-
 }
 impl ClockSource for Hse {
     fn get_input_frequency(&self) -> u32 {
@@ -242,11 +245,6 @@ impl Device for Hse {
         }
     }
 }
-impl From<Hse> for u32 {
-    fn from(source: Hse) -> u32 {
-        1
-    }
-}
 
 pub struct Pll {
     rcc: Rcc,
@@ -257,17 +255,20 @@ impl Pll {
             rcc: Rcc::new(),
         }
     }
-    pub fn set_source(&self, source: impl PllClockSource) {
-        source.enable();
-        let bin_source: u32 = source.into();
+    pub fn set_source(&self, source: PllClockSource) {
+        let bin_source: u32 = (&source).into();
+
+        match source {
+            PllClockSource::Hsi => panic!("Hsi not implemented"),
+            PllClockSource::Hse(clock_source) => {
+                clock_source.enable();
+            },
+        }
         self.rcc.set_pll_clock_source(bin_source);
     }
-    pub fn get_source(&self) -> impl PllClockSource {
-        let source = self.rcc.get_pll_clock_source();
-        match source {
-            1 => Hse::new(),
-            _ => panic!(""),
-        }
+    pub fn get_source(&self) -> PllClockSource {
+        let source: PllClockSource = self.rcc.get_pll_clock_source().into();
+        source
     }
     pub fn set_multiplication_factor(&self, factor: PllMul) {
         self.rcc.set_pll_multiplication_factor(factor as u32);
@@ -277,13 +278,15 @@ impl Pll {
         factor
     }
 }
-impl SystemClockSource for Pll {
-
-}
 impl ClockSource for Pll {
     fn get_input_frequency(&self) -> u32 {
         let clock_source = self.get_source();
-        clock_source.get_output_frequency()
+        match clock_source {
+            PllClockSource::Hsi => panic!("Hsi not implemented"),
+            PllClockSource::Hse(source) => {
+                source.get_output_frequency()
+            },
+        }
     }
     fn get_output_frequency(&self) -> u32 {
         self.get_input_frequency() * self.get_pll_multiplication_factor() as u32
@@ -319,11 +322,6 @@ impl Device for Pll {
         }
     }
 }
-impl From<Pll> for u32 {
-    fn from(source: Pll) -> u32 {
-        2
-    }
-}
 pub enum PllMul {
     Pllx9 = 7,
 }
@@ -336,14 +334,53 @@ impl From<u32> for PllMul {
     }
 }
 
-pub trait SystemClockSource: ClockSource {
-
+pub enum SystemClockSource {
+    Hsi,
+    Hse(Hse),
+    Pll(Pll),
 }
-pub trait PllClockSource:  ClockSource {
-
+impl From<u32> for SystemClockSource {
+    fn from(source: u32) -> SystemClockSource {
+        match source {
+            0 => SystemClockSource::Hsi,
+            1 => SystemClockSource::Hse(Hse::new()),
+            2 => SystemClockSource::Pll(Pll::new()),
+            _ => panic!("There is no clock source with bin code = {}", source),
+        }
+    }
 }
+impl From<&SystemClockSource> for u32 {
+    fn from(source: &SystemClockSource) -> u32 {
+        match source {
+            SystemClockSource::Hsi => 0,
+            SystemClockSource::Hse(_) => 1,
+            SystemClockSource::Pll(_) => 2,
+        }
+    }
+} 
+pub enum PllClockSource {
+    Hsi,
+    Hse(Hse),
+}
+impl From<u32> for PllClockSource {
+    fn from(source: u32) -> PllClockSource {
+        match source {
+            0 => PllClockSource::Hsi,
+            1 => PllClockSource::Hse(Hse::new()),
+            _ => panic!("There is no pll clock source with bin code = {}", source),
+        }
+    }
+}
+impl From<&PllClockSource> for u32 {
+    fn from(source: &PllClockSource) -> u32 {
+        match source {
+            PllClockSource::Hsi => 0,
+            PllClockSource::Hse(_) => 1,
+        }
+    }
+} 
 
-pub trait ClockSource: Device + Into<u32> {
+pub trait ClockSource {
     fn get_input_frequency(&self) -> u32;
     fn get_output_frequency(&self) -> u32;
 }
