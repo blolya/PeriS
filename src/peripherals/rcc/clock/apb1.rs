@@ -9,10 +9,10 @@ impl From<u32> for Apb1Prescaler {
         }
     }
 }
-pub fn set_apb1_prescaler(&self, prescaler: Apb1Prescaler) {
-    self.rcc.set_apb1_prescaler(prescaler as u32);
-}
-pub fn get_apb1_prescaler(&self) -> Apb1Prescaler {
-    let prescaler: Apb1Prescaler = self.rcc.get_apb1_prescaler().into();
-    prescaler
-}
+// pub fn set_apb1_prescaler(&self, prescaler: Apb1Prescaler) {
+//     self.rcc.set_apb1_prescaler(prescaler as u32);
+// }
+// pub fn get_apb1_prescaler(&self) -> Apb1Prescaler {
+//     let prescaler: Apb1Prescaler = self.rcc.get_apb1_prescaler().into();
+//     prescaler
+// }

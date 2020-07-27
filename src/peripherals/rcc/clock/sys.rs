@@ -13,6 +13,8 @@ impl SystemClock {
         }
     }
     pub fn set_source(&self, source: SystemClockSource) {
+        let bin_source: u32 = (&source).into();
+
         match source {
             SystemClockSource::Hsi(clock_source) => {
                 panic!("Hsi not enabled");
@@ -24,13 +26,12 @@ impl SystemClock {
                 clock_source.enable();
             },
         }
-        let bin_source: u32 = source.into();
         let flash_register = Register::new(0x4002_2000);
         flash_register.write_or(0x0000_0002);
 
         self.rcc.set_system_clock_source(bin_source);
 
-        let mut clock_source: u32 = self.get_source().into();
+        let mut clock_source: u32 = (&self.get_source()).into();
         let mut cycles = 0;
         while clock_source != bin_source {
             clock_source = self.rcc.get_system_clock_source();
@@ -82,8 +83,8 @@ impl From<u32> for SystemClockSource {
         }
     }
 }
-impl From<SystemClockSource> for u32 {
-    fn from(source: SystemClockSource) -> u32 {
+impl From<&SystemClockSource> for u32 {
+    fn from(source: &SystemClockSource) -> u32 {
         match source {
             SystemClockSource::Hsi(_) => 0,
             SystemClockSource::Hse(_) => 1,
