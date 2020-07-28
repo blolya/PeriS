@@ -1,6 +1,5 @@
 use super::{ Clock, super::{ Rcc, super::Device } };
 
-
 pub struct Hse {
     rcc: Rcc,
     input_frequency: u32,
@@ -32,7 +31,7 @@ impl Device for Hse {
     
             cycles += 1;
             if cycles > 100 {
-                panic!("Unable to enable Hse");
+                panic!("Can't enable Hse");
             }
         }
     } 
@@ -46,7 +45,7 @@ impl Device for Hse {
 
             cycles += 1;
             if cycles > 100 {
-                panic!("Unable to disable Hse");
+                panic!("Can't disable Hse");
             }
         }
     }

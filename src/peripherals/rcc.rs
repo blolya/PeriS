@@ -33,8 +33,8 @@ impl Rcc {
     pub fn disable_hsi(&self) {
         self.cr.reset_bit(0);
     }
-    pub fn get_hsi_ready_status(&self) {
-        self.cr.get_bit(1);
+    pub fn get_hsi_ready_status(&self) -> u32 {
+        self.cr.get_bit(1)
     }
 
     // Hse
@@ -70,6 +70,12 @@ impl Rcc {
     pub fn get_pll_multiplication_factor(&self) -> u32 {
         let factor = (self.cfgr.read() >> 18) & 0xF;
         factor
+    }
+    pub fn set_pll_prescaler(&self, prescaler: u32) {
+        self.cfgr.write_bit(17, prescaler);
+    }
+    pub fn get_pll_prescaler(&self) -> u32 {
+        self.cfgr.get_bit(17)
     }
 
     // Prescalers 
