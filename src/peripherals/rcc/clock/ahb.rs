@@ -1,4 +1,4 @@
-use super::{ Clock, super::Rcc, sys::SystemClock };
+use super::{ sys::SystemClock, super::Rcc };
 
 pub struct Ahb {
     rcc: Rcc,
@@ -9,9 +9,33 @@ impl Ahb {
             rcc: Rcc::new(),
         }
     }
-}
-impl Clock for Ahb {
-    fn get_input_frequency(&self) -> u32 {
+    pub fn set_prescaler(&self, prescaler: AhbPrescaler) {
+        let bin_prescaler = match prescaler {
+            AhbPrescaler::Db2 => 8,
+            AhbPrescaler::Db4 => 9,
+            AhbPrescaler::Db8 => 10,
+            AhbPrescaler::Db16 => 11,
+            AhbPrescaler::Db64 => 12,
+            AhbPrescaler::Db128 => 13, 
+            AhbPrescaler::Db256 => 14,
+            AhbPrescaler::Db512 => 15,
+        };
+        self.rcc.set_ahb_prescaler(bin_prescaler)
+    }
+    pub fn get_prescaler(&self) -> AhbPrescaler {
+        match self.rcc.get_ahb_prescaler() {
+            8  => AhbPrescaler::Db2,
+            9  => AhbPrescaler::Db4,
+            10 => AhbPrescaler::Db8,
+            11 => AhbPrescaler::Db16,
+            12 => AhbPrescaler::Db64,
+            13 => AhbPrescaler::Db128,
+            14 => AhbPrescaler::Db256,
+            15 => AhbPrescaler::Db512,
+            _ => panic!("AhbPrescaler"),
+        }
+    }
+    pub fn get_input_frequency(&self) -> u32 {
         let bin_prescaler = self.rcc.get_ahb_prescaler();
         let prescaler = match bin_prescaler {
             8 => AhbPrescaler::Db2,
@@ -26,7 +50,7 @@ impl Clock for Ahb {
         };
         SystemClock::new().get_output_frequency() / prescaler as u32
     }
-    fn get_output_frequency(&self) -> u32 {
+    pub fn get_output_frequency(&self) -> u32 {
         self.get_input_frequency()
     }
 }

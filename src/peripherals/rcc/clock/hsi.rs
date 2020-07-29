@@ -1,4 +1,4 @@
-use super::{ Clock, super::{ Rcc, super::Device } };
+use super::super::Rcc;
 
 pub struct Hsi {
     rcc: Rcc,
@@ -11,17 +11,7 @@ impl Hsi {
             input_frequency: 8,
         }
     }
-}
-impl Clock for Hsi {
-    fn get_input_frequency(&self) -> u32 {
-        self.input_frequency
-    }
-    fn get_output_frequency(&self) -> u32 {
-        self.input_frequency
-    }
-}
-impl Device for Hsi {
-    fn enable(&self) {
+    pub fn enable(&self) {
         self.rcc.enable_hsi();
         let mut hsi_ready_status = self.rcc.get_hsi_ready_status();
 
@@ -35,7 +25,7 @@ impl Device for Hsi {
             }
         }
     } 
-    fn disable(&self) {
+    pub fn disable(&self) {
         self.rcc.disable_hsi();
         let mut hsi_ready_status = self.rcc.get_hsi_ready_status();
 
@@ -48,5 +38,11 @@ impl Device for Hsi {
                 panic!("Can't disable Hsi");
             }
         }
+    }
+    pub fn get_input_frequency(&self) -> u32 {
+        self.input_frequency
+    }
+    pub fn get_output_frequency(&self) -> u32 {
+        self.input_frequency
     }
 }

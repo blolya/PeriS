@@ -1,4 +1,7 @@
-use super::{ hsi::Hsi, hse::Hse, Clock, super::{ Rcc, super::Device } };
+use super::{ 
+    hsi::Hsi, hse::Hse, 
+    super::Rcc 
+};
 
 pub struct Pll {
     rcc: Rcc,
@@ -9,14 +12,44 @@ impl Pll {
             rcc: Rcc::new(),
         }
     }
-    pub fn set_source(&self, source: PllClockSource) {
-        let bin_source: u32 = source.into();
-        self.rcc.set_pll_clock_source(bin_source);
+    pub fn enable(&self) {
+        self.rcc.enable_pll();
+        let mut pll_ready_status = self.rcc.get_pll_ready_status();
 
-        let mut clock_source: u32 = self.get_source().into();
         let mut cycles = 0;
-        while clock_source != bin_source {
-            clock_source = self.get_source().into();
+        while pll_ready_status == 0 {
+            pll_ready_status = self.rcc.get_pll_ready_status();
+
+            cycles += 1;
+            if cycles > 100 {
+                panic!("Unable to enable Pll");
+            }
+        }
+    } 
+    pub fn disable(&self) {
+        self.rcc.disable_pll();
+        let mut pll_ready_status = self.rcc.get_pll_ready_status();
+
+        let mut cycles = 0;
+        while pll_ready_status == 1 {
+            pll_ready_status = self.rcc.get_pll_ready_status();
+
+            cycles += 1;
+            if cycles > 100 {
+                panic!("Unable to disable Pll");
+            }
+        }
+    }
+    pub fn set_clock_source(&self, clock_source: PllClockSource) {
+        match clock_source {
+            PllClockSource::Hsi => self.rcc.set_pll_clock_source(0),
+            PllClockSource::Hse => self.rcc.set_pll_clock_source(1),
+        }
+
+        let mut new_clock_source = self.get_clock_source();
+        let mut cycles = 0;
+        while new_clock_source != clock_source {
+            new_clock_source = self.get_clock_source();
 
             cycles += 1;
             if cycles > 100 {
@@ -24,16 +57,35 @@ impl Pll {
             }
         }
     }
-    pub fn get_source(&self) -> PllClockSource {
-        let source: PllClockSource = self.rcc.get_pll_clock_source().into();
-        source
+    pub fn get_clock_source(&self) -> PllClockSource {
+        match self.rcc.get_pll_clock_source() {
+            0 => PllClockSource::Hsi,
+            1 => PllClockSource::Hse,
+            _ => panic!(""),
+        }
     }
-    pub fn set_multiplication_factor(&self, factor: PllMul) {
-        self.rcc.set_pll_multiplication_factor(factor as u32);
+    pub fn set_mul(&self, factor: PllMul) {
+        let bin_factor = match factor {
+            PllMul::Pllx2 => 0,
+            PllMul::Pllx3 => 1,
+            PllMul::Pllx4 => 2,
+            PllMul::Pllx5 => 3,
+            PllMul::Pllx6 => 4,
+            PllMul::Pllx7 => 5,
+            PllMul::Pllx8 => 6,
+            PllMul::Pllx9 => 7,
+            PllMul::Pllx10 => 8,
+            PllMul::Pllx11 => 9,
+            PllMul::Pllx12 => 10,
+            PllMul::Pllx13 => 11,
+            PllMul::Pllx14 => 12,
+            PllMul::Pllx15 => 13,
+            PllMul::Pllx16 => 14,
+        };
+        self.rcc.set_pll_multiplication_factor(bin_factor);
     }
-    pub fn get_pll_multiplication_factor(&self) -> PllMul {
-        let bin_factor = self.rcc.get_pll_multiplication_factor();
-        let factor = match bin_factor {
+    pub fn get_mul(&self) -> PllMul {
+        match self.rcc.get_pll_multiplication_factor() {
             0 => PllMul::Pllx2,
             1 => PllMul::Pllx3,
             2 => PllMul::Pllx4,
@@ -51,70 +103,32 @@ impl Pll {
             14 => PllMul::Pllx16,
             15 => PllMul::Pllx16,
             _ => panic!("Unknown pll multiplication factor"),
-        };
-        factor
+        }
     }
-    pub fn set_prescaler(&self, prescaler: PllPrescaler) {
+    pub fn set_hse_prescaler(&self, prescaler: PllHsePrescaler) {
         let bin_prescaler = match prescaler {
-            PllPrescaler::Db1 => 0,
-            PllPrescaler::Db2 => 1,
-            _ => panic!("Unknown pll prescaler"),
+            PllHsePrescaler::Db1 => 0,
+            PllHsePrescaler::Db2 => 1,
         };
         self.rcc.set_pll_prescaler(bin_prescaler);
     }
-    pub fn get_prescaler(&self) -> PllPrescaler {
+    pub fn get_hse_prescaler(&self) -> PllHsePrescaler {
         let bin_prescaler = self.rcc.get_pll_prescaler();
         match bin_prescaler {
-            0 => PllPrescaler::Db1,
-            1 => PllPrescaler::Db2,
+            0 => PllHsePrescaler::Db1,
+            1 => PllHsePrescaler::Db2,
             _ => panic!("Unknown pll prescaler"),
         }
     }
-}
-impl Clock for Pll {
-    fn get_input_frequency(&self) -> u32 {
-        let clock_source = self.get_source();
+    pub fn get_input_frequency(&self) -> u32 {
+        let clock_source = self.get_clock_source();
         match clock_source {
-            PllClockSource::Hsi(source) => {
-                source.get_output_frequency()
-            },
-            PllClockSource::Hse(source) => {
-                source.get_output_frequency() / self.get_prescaler() as u32
-            },
+            PllClockSource::Hsi => Hsi::new().get_output_frequency(),
+            PllClockSource::Hse => Hse::new().get_output_frequency() / self.get_hse_prescaler() as u32,
         }
     }
-    fn get_output_frequency(&self) -> u32 {
-        self.get_input_frequency() * self.get_pll_multiplication_factor() as u32
-    }
-}
-impl Device for Pll {
-    fn enable(&self) {
-        self.rcc.enable_pll();
-        let mut pll_ready_status = self.rcc.get_pll_ready_status();
-
-        let mut cycles = 0;
-        while pll_ready_status == 0 {
-            pll_ready_status = self.rcc.get_pll_ready_status();
-
-            cycles += 1;
-            if cycles > 100 {
-                panic!("Unable to enable Pll");
-            }
-        }
-    } 
-    fn disable(&self) {
-        self.rcc.disable_pll();
-        let mut pll_ready_status = self.rcc.get_pll_ready_status();
-
-        let mut cycles = 0;
-        while pll_ready_status == 1 {
-            pll_ready_status = self.rcc.get_pll_ready_status();
-
-            cycles += 1;
-            if cycles > 100 {
-                panic!("Unable to disable Pll");
-            }
-        }
+    pub fn get_output_frequency(&self) -> u32 {
+        self.get_input_frequency() * self.get_mul() as u32
     }
 }
 pub enum PllMul {
@@ -156,38 +170,14 @@ impl From<u32> for PllMul {
         }
     }
 }
-pub enum PllPrescaler {
+
+#[derive(PartialEq)]
+pub enum PllHsePrescaler {
     Db1 = 1,
     Db2 = 2,
 }
-impl From<u32> for PllPrescaler {
-    fn from(prescaler: u32) -> PllPrescaler {
-        match prescaler {
-            1 => PllPrescaler::Db1,
-            2 => PllPrescaler::Db2,
-            _ => panic!(""),
-        }
-    }
-}
-
+#[derive(PartialEq)]
 pub enum PllClockSource {
-    Hsi(Hsi),
-    Hse(Hse),
+    Hsi,
+    Hse,
 }
-impl From<u32> for PllClockSource {
-    fn from(source: u32) -> PllClockSource {
-        match source {
-            0 => PllClockSource::Hsi(Hsi::new()),
-            1 => PllClockSource::Hse(Hse::new()),
-            _ => panic!("There is no pll clock source with bin code = {}", source),
-        }
-    }
-}
-impl From<PllClockSource> for u32 {
-    fn from(source: PllClockSource) -> u32 {
-        match source {
-            PllClockSource::Hsi(_) => 0,
-            PllClockSource::Hse(_) => 1,
-        }
-    }
-} 
