@@ -3,9 +3,9 @@ pub mod clock;
 use super::super::core::Register;
 
 pub struct Rcc {
-    cr: Register,
-    cfgr: Register,
-    apb2enr: Register,
+    pub cr: Register,
+    pub cfgr: Register,
+    pub apb2enr: Register,
 }
 impl Rcc {
     pub fn new() -> Rcc {

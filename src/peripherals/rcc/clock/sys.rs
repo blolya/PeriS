@@ -2,6 +2,7 @@ use super:: {
     hsi::Hsi, hse::Hse, pll::Pll,
     super:: Rcc,
 };
+use super::super::super::super::core::Register;
 
 
 pub struct SystemClock {
@@ -14,6 +15,9 @@ impl SystemClock {
         }
     }
     pub fn set_clock_source(&self, clock_source: SystemClockSource) {
+        let flash_register = Register::new(0x4002_2000);
+        flash_register.write_or(0x0000_0002);
+    
         match clock_source {
             SystemClockSource::Hsi => self.rcc.set_system_clock_source(0),
             SystemClockSource::Hse => self.rcc.set_system_clock_source(1),
