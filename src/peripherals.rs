@@ -1,5 +1,6 @@
 pub mod gpio;
 pub mod rcc;
+pub mod flash;
 pub mod communication;
 
 pub trait Device {

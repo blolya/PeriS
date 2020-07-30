@@ -1,9 +1,10 @@
 use super:: {
     hsi::Hsi, hse::Hse, pll::Pll,
-    super:: Rcc,
+    super:: {
+        super::flash::Flash,
+        Rcc,
+    }
 };
-use super::super::super::super::core::Register;
-
 
 pub struct SystemClock {
     rcc: Rcc,
@@ -15,9 +16,22 @@ impl SystemClock {
         }
     }
     pub fn set_clock_source(&self, clock_source: SystemClockSource) {
-        let flash_register = Register::new(0x4002_2000);
-        flash_register.write_or(0x0000_0002);
-    
+        let input_frequency = match clock_source {
+            SystemClockSource::Hsi => Hsi::new().get_output_frequency(),
+            SystemClockSource::Hse => Hse::new().get_output_frequency(),
+            SystemClockSource::Pll => Pll::new().get_output_frequency(),
+        };
+        let latency = if input_frequency <= 24 {
+            0
+        } else if input_frequency <= 48 {
+            1
+        } else if input_frequency <= 72 {
+            2
+        } else {
+            panic!("System frequency is too high");
+        };
+        Flash::new().set_latency(latency);
+
         match clock_source {
             SystemClockSource::Hsi => self.rcc.set_system_clock_source(0),
             SystemClockSource::Hse => self.rcc.set_system_clock_source(1),

@@ -34,9 +34,10 @@ fn main() -> ! {
 
 
     let ua1 = Usart1::new();
-    let arr: () = "Wuuuooug\n".as_bytes().iter().map( |c| {
-        ua1.send(*c);
-    }).collect();
+    ua1.send('J' as u32);
+    ua1.send('o' as u32);
+
+    ua1.send('\r' as u32);
 
     loop {}
 }
