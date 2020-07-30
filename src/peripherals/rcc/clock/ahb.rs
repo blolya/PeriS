@@ -11,6 +11,7 @@ impl Ahb {
     }
     pub fn set_prescaler(&self, prescaler: AhbPrescaler) {
         let bin_prescaler = match prescaler {
+            AhbPrescaler::Db1 => 0,
             AhbPrescaler::Db2 => 8,
             AhbPrescaler::Db4 => 9,
             AhbPrescaler::Db8 => 10,
@@ -24,6 +25,7 @@ impl Ahb {
     }
     pub fn get_prescaler(&self) -> AhbPrescaler {
         match self.rcc.get_ahb_prescaler() {
+            0..=7 => AhbPrescaler::Db1,
             8  => AhbPrescaler::Db2,
             9  => AhbPrescaler::Db4,
             10 => AhbPrescaler::Db8,
@@ -38,6 +40,7 @@ impl Ahb {
     pub fn get_input_frequency(&self) -> u32 {
         let bin_prescaler = self.rcc.get_ahb_prescaler();
         let prescaler = match bin_prescaler {
+            0..=7 => AhbPrescaler::Db1,
             8 => AhbPrescaler::Db2,
             9 => AhbPrescaler::Db4,
             10 => AhbPrescaler::Db8,
@@ -55,6 +58,7 @@ impl Ahb {
     }
 }
 pub enum AhbPrescaler {
+    Db1 = 1,
     Db2 = 2,
     Db4 = 4,
     Db8 = 8,
@@ -67,6 +71,7 @@ pub enum AhbPrescaler {
 impl From<u32> for AhbPrescaler {
     fn from(prescaler: u32) -> AhbPrescaler {
         match prescaler {
+            1 => AhbPrescaler::Db1,
             2 => AhbPrescaler::Db2,
             4 => AhbPrescaler::Db4,
             8 => AhbPrescaler::Db8,

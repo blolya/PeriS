@@ -15,6 +15,7 @@ use peris::peripherals::{
         apb1:: { Apb1, Apb1Prescaler },
     }
 };
+use peris::peripherals::rcc::clock::apb2::Apb2;
 
 #[entry]
 fn main() -> ! {
@@ -34,9 +35,8 @@ fn main() -> ! {
 
 
     let ua1 = Usart1::new();
-    ua1.send('J' as u32);
-    ua1.send('o' as u32);
-
+    ua1.send('L' as u32);
+    ua1.send('a' as u32);
     ua1.send('\r' as u32);
 
     loop {}
