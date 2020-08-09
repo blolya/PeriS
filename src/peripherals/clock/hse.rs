@@ -1,4 +1,4 @@
-use super::super::Rcc;
+use super::super::super::core::rcc::Rcc;
 
 pub struct Hse {
     rcc: Rcc,

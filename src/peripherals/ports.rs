@@ -1,11 +1,11 @@
-use super::Gpio;
+use super::super::core::gpio::Gpio;
 
-pub struct Port<'a, T: Gpio> {
+pub struct Port<'a> {
     port_num: PortNum,
-    gpio: &'a T,
+    gpio: &'a Gpio,
 }
-impl<'a, T: Gpio> Port<'a, T> {
-    pub fn new(port_num: PortNum, port_mode: PortMode, gpio: &'a T) -> Port<'a, T> {
+impl<'a> Port<'a> {
+    pub fn new(port_num: PortNum, port_mode: PortMode, gpio: &'a Gpio) -> Port<'a> {
         let port = Port { port_num, gpio };
         port.set_mode(port_mode);
         port

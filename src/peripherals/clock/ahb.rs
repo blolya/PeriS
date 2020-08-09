@@ -1,4 +1,7 @@
-use super::{ sys::SystemClock, super::Rcc };
+use super::{
+    sys::SystemClock, 
+    super::super::core::rcc::Rcc,
+};
 
 pub struct Ahb {
     rcc: Rcc,

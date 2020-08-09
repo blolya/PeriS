@@ -1,6 +1,6 @@
 use super::{ 
     hsi::Hsi, hse::Hse, 
-    super::Rcc 
+    super::super::core::rcc::Rcc,
 };
 
 pub struct Pll {

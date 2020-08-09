@@ -1,4 +1,7 @@
-use super::{ ahb::Ahb, super::Rcc };
+use super::{
+    ahb::Ahb,
+    super::super::core::rcc::Rcc,
+};
 
 pub struct Apb1 {
     rcc: Rcc,

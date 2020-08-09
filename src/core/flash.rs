@@ -1,4 +1,4 @@
-use super::super::core::Register;
+use super::register::Register;
 
 pub struct Flash {
     acr: Register,

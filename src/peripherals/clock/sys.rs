@@ -1,9 +1,9 @@
-use super:: {
+use super::{
     hsi::Hsi, hse::Hse, pll::Pll,
-    super:: {
-        super::flash::Flash,
-        Rcc,
-    }
+    super::super::core::{
+        rcc::Rcc,
+        flash::Flash,
+    },
 };
 
 pub struct SystemClock {

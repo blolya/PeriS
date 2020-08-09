@@ -1,6 +1,4 @@
-pub mod clock;
-
-use super::super::core::Register;
+use super::register::Register;
 
 pub struct Rcc {
     pub cr: Register,
