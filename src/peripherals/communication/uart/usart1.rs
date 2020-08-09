@@ -1,3 +1,5 @@
+use core::fmt::Display;
+
 use super::super::super::{
     clock::apb2::Apb2,
     ports::{
@@ -73,12 +75,17 @@ impl Usart1 {
 
         self.cr1.set_bit(3);
     }
-    pub fn send(&self, data: u32) {
+    pub fn send_char(&self, data: char) {
         let mut status = self.sr.get_bit(7);
         while status != 1 {
             status = self.sr.get_bit(7);
         }
-        self.dr.write(data);
+        self.dr.write(data as u32);
+    }
+    pub fn send(&self, data: &str) {
+        for ch in data.chars() {
+            self.send_char(ch);
+        }
     }
     pub fn enable_clock() {
         Rcc::new().enable_usart1();

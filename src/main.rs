@@ -14,10 +14,7 @@ fn main() -> ! {
     clock::init();
 
     let ua1 = Usart1::new();
-    ua1.send('L' as u32);
-    ua1.send('o' as u32);
-    ua1.send('h' as u32);
-    ua1.send('\r' as u32);
+    ua1.send("Hello, World!\r");
 
     loop {}
 }
