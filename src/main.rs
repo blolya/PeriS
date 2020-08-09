@@ -10,12 +10,11 @@ use peris::peripherals::{
     },
     rcc::clock::{ 
         hse::Hse, 
-        pll::{ Pll, PllMul, PllClockSource },
+        pll::{ Pll, PllMul, PllClockSource, PllHsePrescaler },
         sys::{ SystemClock, SystemClockSource },
         apb1:: { Apb1, Apb1Prescaler },
     }
 };
-use peris::peripherals::rcc::clock::apb2::Apb2;
 
 #[entry]
 fn main() -> ! {
@@ -24,6 +23,7 @@ fn main() -> ! {
 
     let pll = Pll::new();
     pll.set_mul(PllMul::Pllx9);
+    pll.set_hse_prescaler(PllHsePrescaler::Db2);
     pll.set_clock_source(PllClockSource::Hse);
     pll.enable();
 
@@ -35,8 +35,8 @@ fn main() -> ! {
 
 
     let ua1 = Usart1::new();
-    ua1.send('L' as u32);
     ua1.send('a' as u32);
+    ua1.send('s' as u32);
     ua1.send('\r' as u32);
 
     loop {}
