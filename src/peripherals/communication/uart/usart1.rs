@@ -75,6 +75,13 @@ impl Usart1 {
 
         self.cr1.set_bit(3);
     }
+    pub fn send_byte(&self, byte: u8) {
+        let mut status = self.sr.get_bit(7);
+        while status != 1 {
+            status = self.sr.get_bit(7);
+        }
+        self.dr.write(byte as u32);
+    }
     pub fn send_char(&self, data: char) {
         let mut status = self.sr.get_bit(7);
         while status != 1 {

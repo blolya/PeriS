@@ -30,7 +30,7 @@ pub fn init() {
 
     let pll = Pll::new();
     pll.set_mul(PllMul::Pllx9);
-    pll.set_hse_prescaler(PllHsePrescaler::Db2);
+    pll.set_hse_prescaler(PllHsePrescaler::Db1);
     pll.set_clock_source(PllClockSource::Hse);
     pll.enable();
 

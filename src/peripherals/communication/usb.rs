@@ -1,13 +1,12 @@
 use crate::core::rcc::Rcc;
 use crate::core::register::Register;
 pub struct Usb {
-    ep0r: Register,
-    cntr: Register,
-    istr: Register,
-    daddr: Register,
-    btable: Register,
-    pma: Register,
-    buffer: [u32;64],
+    pub ep0r: Register,
+    pub cntr: Register,
+    pub istr: Register,
+    fnr: Register,
+    pub daddr: Register,
+    pub btable: Register,
 }
 impl Usb {
     pub fn new() -> Usb {
@@ -18,28 +17,29 @@ impl Usb {
             ep0r: Register::new(address),
             cntr: Register::new(address + 0x40),
             istr: Register::new(address + 0x44),
+            fnr: Register::new(address + 0x48),
             daddr: Register::new(address + 0x4C),
             btable: Register::new(address + 0x50),
-            pma: Register::new(0x4000_6000),
-            buffer: [0; 64],
         }
     }
 
-    pub fn write_pma(&self, buffer: &[u32], mut offset: u32) {
+    pub fn write_pma(&self, buffer: &[u16], mut offset: u32) {
         for element in buffer {
-            let pma = (0x4000_6000 + offset * 2) as *mut u32;
+            let pma = (0x4000_6000 + offset * 2) as *mut u16;
             unsafe {
                 *pma = *element;
             }
             offset += 1;
         }
     }
-    pub fn read_pma(&self, buffer: &mut [u32], offset: u32) {
-        let pma = (0x4000_6000 + offset) as *mut u32;
-        for element in buffer {
+    pub fn read_pma(&self, buffer: &mut [u32], mut offset: u32) {
+        let pma_left = (0x4000_6000 + offset) as *mut u16;
+        let pma_right = (0x4000_6000 + offset + 1) as *mut u16;
+        for i in 0..32 {
             unsafe {
-                *element = *pma;
+                buffer[i] = (*pma_left as u32) << 16 | *pma_right as u32;
             }
+            offset += 2;
         }
     }
 
@@ -82,7 +82,7 @@ impl Usb {
         self.istr.get_bit(10)
     }
     pub fn reset(&self) {
-        let descriptor0: [u32; 4] = [64, 0, 128, 33792];
+        let descriptor0: [u16; 4] = [64, 0, 128, 33792];
         Usb::enable_clock();
         self.write_pma(&descriptor0, 0);
         self.cntr.write(0);
@@ -118,7 +118,7 @@ impl Usb {
             0x0680 => {
                 match buffer[3] {
                     0x01 => {
-                        let device_descriptor: [u32; 18] = [
+                        let device_descriptor: [u16; 18] = [
                             0x12, 0x01, 0x00, 0x02,
                             0x00, 0x00, 0x00, 0x40,
                             0xff, 0xff, 0xff, 0xff,
@@ -126,7 +126,7 @@ impl Usb {
                             0x03, 0x01,
                         ];
                         self.write_pma(&device_descriptor, 64);
-                        self.write_pma(&[buffer[3]], 2);
+                        self.write_pma(&[buffer[3] as u16], 2);
                         
                         self.ep0r.write( 36671 & 48 ^ self.ep0r.read() );
                         while self.ep0r.get_bit(7) == 0 {}
@@ -136,7 +136,7 @@ impl Usb {
 
                     },
                     0x02 => {
-                        let config_descriptor: [u32; 41] = [
+                        let config_descriptor: [u16; 41] = [
                             0x09, 0x02, 41, 0x00, 0x01, 0x01, 0x00, 0xE0, 0x32,
                             0x09, 0x04, 0x00, 0x00, 0x02, 0x03, 0x00, 0x00, 0x00,
                             0x09, 0x21, 0x01, 0x01, 0x00, 0x01, 0x22, 23, 0x00,
@@ -150,7 +150,7 @@ impl Usb {
                         } else {
                             buf1 = 41;
                         }
-                        self.write_pma(&[buf1], 2);
+                        self.write_pma(&[buf1 as u16], 2);
 
                         self.ep0r.write( 36671 & 48 ^ self.ep0r.read() );
                         while self.ep0r.get_bit(7) == 0 {}
@@ -187,7 +187,7 @@ impl Usb {
                 self.write_pma(&[0], 2);
                 self.ep0r.write( 36671 & 48 ^ self.ep0r.read() );
                 while self.ep0r.get_bit(7) == 0 {}
-                self.daddr.write(addr_buf[0]);
+                self.daddr.write(addr_buf[0] as u32);
                 self.ep0r.write( 16271 & 12288 ^ self.ep0r.read() );
 
             },
@@ -246,17 +246,20 @@ impl Usb {
                 while self.ep0r.get_bit(7) == 0 {}
                 self.ep0r.write( 16271 & 12288 ^ self.ep0r.read() );
             },
-            0x01A1 => {
-                self.write_pma(&buffer, 64);
-                self.write_pma(&[64], 2);
-                self.ep0r.write( 36671 & 48 ^ self.ep0r.read() );
-                while self.ep0r.get_bit(7) == 0 {}
-                self.ep0r.write( 16271 & 12288 ^ self.ep0r.read() );
-                while self.ep0r.get_bit(15) == 0 {}
-                self.ep0r.write( 16271 & 12288 ^ self.ep0r.read() );
-            },
+            // 0x01A1 => {
+            //     self.write_pma(&buffer[..] as u16, 64);
+            //     self.write_pma(&[64], 2);
+            //     self.ep0r.write( 36671 & 48 ^ self.ep0r.read() );
+            //     while self.ep0r.get_bit(7) == 0 {}
+            //     self.ep0r.write( 16271 & 12288 ^ self.ep0r.read() );
+            //     while self.ep0r.get_bit(15) == 0 {}
+            //     self.ep0r.write( 16271 & 12288 ^ self.ep0r.read() );
+            // },
             _ => panic!(""),
         }
+    }
+    pub fn get_lsof(&self) -> u32 {
+        (self.fnr.read() >> 11) & 0x3
     }
 
     pub fn enable_clock() {
