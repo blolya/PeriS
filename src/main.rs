@@ -42,10 +42,8 @@ fn main() -> ! {
     usb.cntr.write_or(0x8C00);
 
     while usb.istr.get_bit(10) == 0 {};
-    usb.cntr.reset_bit(10);
-
-    dbgr.send("Reset has occured\r");
-    usb.cntr.reset_bit(10);
+    // usb.cntr.reset_bit(10);
+    // dbgr.send("Reset has occured\r");
 
     usb.ep0r.write(0x3220);
     let pma_base = 0x4000_6000;
@@ -55,16 +53,17 @@ fn main() -> ! {
         *((pma_base + 12) as *mut u16) = 0x8400 as u16;
     }
     usb.daddr.write(0x80);
-
     while usb.istr.get_bit(15) == 0 {};
-    dbgr.send("Correct transfer has occured\r");
+    dbgr.send("Qwe\r");
+
+    // dbgr.send("Correct transfer has occured\r");
 
     let dir = usb.istr.get_bit(4);
     let ep_id = usb.istr.read() & 0xF;
 
     if ep_id == 0 {
         while usb.ep0r.get_bit(15) == 0 {};
-        dbgr.send("0 endpoint correct transfer\r");
+        // dbgr.send("0 endpoint correct transfer\r");
         if dir == 1 {
             usb.ep0r.reset_bit(15);
         }
@@ -84,7 +83,7 @@ fn main() -> ! {
 
         match buffer[0] + buffer[1] * 256 {
             0x0680 => {
-                dbgr.send("Descriptor request\r");
+                // dbgr.send("Descriptor request\r");
                 unsafe {
                     *((pma_base + 0x80) as *mut u16) = 0x1201 as u16;
                     // *((pma_base + 0x81) as *mut u16) = 0x01 as u16;
@@ -115,21 +114,21 @@ fn main() -> ! {
                 usb.ep0r.write( 48 ^ 36671 &  usb.ep0r.read() );
                 
                 while usb.ep0r.get_bit(7) == 0 {};
-                dbgr.send("Correct descriptor transmission\r");
+                // dbgr.send("Correct descriptor transmission\r");
 
                 usb.ep0r.write( 12288 ^ 16271 &  usb.ep0r.read() );
                 while usb.ep0r.get_bit(15) == 0 {};
-                dbgr.send("Empty package\r");
+                // dbgr.send("Empty package\r");
 
                 usb.ep0r.write( 12288 ^ 16271 &  usb.ep0r.read() );
-                dbgr.send("Empty package\r");
+                // dbgr.send("Empty package\r");
 
             },
             0x0000 => {
-                dbgr.send("Error\r");
+                // dbgr.send("Error\r");
             },
             _ => {
-                dbgr.send("Smth request\r");
+                // dbgr.send("Smth request\r");
             },
         };
     }
