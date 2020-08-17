@@ -4,14 +4,12 @@ pub struct Usb {
     pub ep0r: Register,
     pub cntr: Register,
     pub istr: Register,
-    fnr: Register,
+    pub fnr: Register,
     pub daddr: Register,
     pub btable: Register,
 }
 impl Usb {
     pub fn new() -> Usb {
-        Rcc::new().enable_iopa();
-        Usb::enable_clock();
         let address = 0x4000_5C00;
         Usb {
             ep0r: Register::new(address),

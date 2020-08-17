@@ -141,5 +141,11 @@ impl Rcc {
     pub fn disable_usb(&self) {
         self.apb1enr.reset_bit(23);
     }
+    pub fn set_usb_prescaler(&self, prescaler: u32) {
+        self.cfgr.write( (self.cfgr.read() & !(0b1 << 22)) | ((prescaler & 0b1) << 22) );
+    }
+    pub fn get_usb_prescaler(&self) -> u32 {
+        (self.cfgr.read() >> 22) & 0b1
+    }
 }
 

@@ -26,7 +26,7 @@ pub struct Usart1 {
 }
 impl Usart1 {
     pub fn new() -> Usart1 {
-        Rcc::new().enable_afio();
+        Rcc::new().enable_iopa();
         Usart1::enable_clock();
         let address = 0x4001_3800;
         let usart = Usart1 {

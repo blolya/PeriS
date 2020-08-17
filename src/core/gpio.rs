@@ -9,7 +9,7 @@ pub struct Gpio {
     crh: Register,
     idr: Register,
     odr: Register,
-    bsrr: Register,
+    pub bsrr: Register,
     brr: Register,
     lckr: Register,
 }

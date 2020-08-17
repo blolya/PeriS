@@ -5,6 +5,7 @@ pub mod sys;
 pub mod ahb;
 pub mod apb1;
 pub mod apb2;
+pub mod usb;
 
 use self::{
     hse::Hse,
@@ -22,11 +23,18 @@ use self::{
         Apb1,
         Apb1Prescaler
     },
+    usb::{
+        Usb,
+        UsbPrescaler,
+    }
 };
 
 pub fn init() {
     let hse = Hse::new();
     hse.enable();
+
+    let usb = Usb::new();
+    usb.set_prescaler(UsbPrescaler::Db1_5);
 
     let pll = Pll::new();
     pll.set_mul(PllMul::Pllx9);
