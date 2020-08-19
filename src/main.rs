@@ -109,7 +109,8 @@ fn main() -> ! {
                         if setup == 1 {
                             dbgr.send("Heeeeeee");
     
-                            usb.ep0r.write(usb.ep0r.read() & !0xF070);
+                            let value = usb.ep0r.read() & 0x708F;
+                            usb.ep0r.write(value | 0x0200);
                             dbgr.send_byte(((usb.ep0r.read() & (0xFF << 8)) >> 8) as u8);
                             dbgr.send_byte(((usb.ep0r.read()) & 0xFF) as u8);
                             let bytes_received = unsafe {
@@ -129,8 +130,6 @@ fn main() -> ! {
                             // dbgr.send_byte( ((d & (0xFF << 8)) >> 8) as u8 );
                             // dbgr.send_byte( (d & 0xFF) as u8 );
     
-                            dbgr.send_byte(((usb.ep0r.read() & (0xFF << 8)) >> 8) as u8);
-                            dbgr.send_byte(((usb.ep0r.read()) & 0xFF) as u8);
 
                             unsafe {
                                 *((pma_base + 64 * 2) as *mut u16) = 0x1201 as u16;
@@ -150,16 +149,15 @@ fn main() -> ! {
                                 *((pma_base + 4) as *mut u16) = 18 as u16;
                             }
 
-                            let mut value = usb.ep0r.read() ^ 0x0030;
-                            value = value & !0x7000;
-                            usb.ep0r.write(value);
+                            usb.ep0r.write(usb.ep0r.read() ^ 0x0030);
                                 
                             dbgr.send_byte(((usb.ep0r.read() & (0xFF << 8)) >> 8) as u8);
                             dbgr.send_byte(((usb.ep0r.read()) & 0xFF) as u8);
-                            dbgr.send("qweqwe\r\n");
+                            dbgr.send("qweqsfsdfsdfwe\r\n");
 
                             while usb.ep0r.get_bit(7) == 0 {};
-                            usb.ep0r.write(usb.ep0r.read() & !0x70F0);
+                            usb.ep0r.write(usb.ep0r.read() & 0x8F7F);
+                            dbgr.send("qweqsfsdfwefwerwetwetsdfwe\r\n");
 
                             dbgr.send_byte(((usb.ep0r.read() & (0xFF << 8)) >> 8) as u8);
                             dbgr.send_byte(((usb.ep0r.read()) & 0xFF) as u8);
