@@ -105,15 +105,50 @@ fn main() -> ! {
                 let transaction_type = usb.ep0r.get_bit(11);
                 usb.ep0r.write(0x0280);
                 let bytes_received = unsafe {
-                    *((pma_base + 12) as *mut u32) // allocate 64 bytes of memory for reception
+                    *((pma_base + 12) as *mut u32) & 0xFF // allocate 64 bytes of memory for reception
                 };
-                dbgr.send("Bytes received:");
-                dbgr.send_byte(((bytes_received & (0xFF << 8)) >> 8) as u8 );
-                dbgr.send_byte((bytes_received & 0xFF) as u8 );
-                dbgr.send_byte(unsafe {
-                    (*((pma_base + 256) as *mut u32)) as u8 // allocate 64 bytes of memory for reception
-                });
+
+                let mut buffer = [0; 8];
+                for i in 0..(bytes_received / 4) as usize {
+                    buffer[i] = unsafe {
+                        let pma_first_word = *((pma_base + 128 * 2 + i * 8) as *mut u16);
+                        let pma_second_word = *((pma_base + 128 * 2 + i * 8 + 4) as *mut u16);
+
+                        let left_part = (pma_first_word & 0xff) << 8 | (pma_first_word >> 8) & 0xff;
+                        let right_part = (pma_second_word & 0xff) << 8 | (pma_second_word >> 8) & 0xff;
+
+                        (left_part as u32) << 16 | right_part as u32
+                    }
+                }
+
+                for element in buffer.iter() {
+                    dbgr.send_byte( ((element >> 24) & 0xFF) as u8 );
+                    dbgr.send_byte( ((element >> 16) & 0xFF) as u8 );
+                    dbgr.send_byte( ((element >> 8) & 0xFF) as u8 );
+                    dbgr.send_byte( (element & 0xFF) as u8 );
+                }
                 dbgr.send("_______________________\r\n");
+                unsafe {
+                    *((pma_base + 64 * 2) as *mut u16) = 0x1201 as u16;
+                    *((pma_base + 64 * 2 + 4) as *mut u16) = 0x1001 as u16;
+        
+                    *((pma_base + 64 * 2 + 8) as *mut u16) = 0x0000 as u16;
+                    *((pma_base + 64 * 2 + 12) as *mut u16) = 0x0040 as u16;
+        
+                    // *((pma_base + 64 * 2 + 16) as *mut u16) = 0x8405 as u16;
+                    // *((pma_base + 64 * 2 + 20) as *mut u16) = 0x1157 as u16;
+        
+                    // *((pma_base + 64 * 2 + 24) as *mut u16) = 0x0100 as u16;
+                    // *((pma_base + 64 * 2 + 28) as *mut u16) = 0x0102 as u16;
+        
+                    // *((pma_base + 64 * 2 + 32) as *mut u16) = 0x0301 as u16;
+
+                    *((pma_base + 4) as *mut u16) = 8 as u16;
+                    // *((pma_base + 4) as *mut u16) = 4 as u16;
+                }
+
+                usb.ep0r.write(0x2210);
+
             }
 
             // if dir == 1 {
