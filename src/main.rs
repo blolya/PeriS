@@ -89,27 +89,20 @@ fn main() -> ! {
                     *((pma_base + 12) as *mut u32) & 0xFF // allocate 64 bytes of memory for reception
                 };
 
-                let mut buffer = [0; 16];
-                for i in 0..(bytes_received / 4) as usize {
-                    buffer[i] = unsafe {
-                        let pma_first_word = *((pma_base + 128 * 2 + i * 8) as *mut u16);
-                        let pma_second_word = *((pma_base + 128 * 2 + i * 8 + 4) as *mut u16);
-
-                        let left_part = (pma_first_word & 0xff) << 8 | (pma_first_word >> 8) & 0xff;
-                        let right_part = (pma_second_word & 0xff) << 8 | (pma_second_word >> 8) & 0xff;
-
-                        (left_part as u32) << 16 | right_part as u32
-                    }
+                let mut buffer: [u8; 64] = [0; 64];
+                for i in 0..(bytes_received / 2) as usize {
+                    let pma_word = unsafe {
+                        *((pma_base + 128 * 2 + i * 4) as *mut u16)
+                    };
+                    buffer[2 * i] = (pma_word & 0xff) as u8;
+                    buffer[2 * i + 1] = (pma_word >> 8 & 0xff) as u8;
                 }
 
                 dbgr.send("The");
                 dbgr.send_byte((bytes_received & 0xFF) as u8);
                 dbgr.send("bytes of data received. Data:");
                 for element in buffer.iter() {
-                    dbgr.send_byte((element >> 24 & 0xFF) as u8);
-                    dbgr.send_byte((element >> 16 & 0xFF) as u8);
-                    dbgr.send_byte((element >> 8 & 0xFF) as u8);
-                    dbgr.send_byte((element & 0xFF) as u8);
+                    dbgr.send_byte(*element);
                 }
                 dbgr.send("_______________________\r\n");
 
