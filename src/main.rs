@@ -110,31 +110,33 @@ fn main() -> ! {
                 dbgr.send("_______________________\r\n");
 
                 if (buffer[0] as u16) << 8 | buffer[1] as u16 == 0x8006 {
-                    unsafe {
-                        *((pma_base + 64 * 2) as *mut u16) = 0x0112 as u16;
-                        *((pma_base + 64 * 2 + 4) as *mut u16) = 0x0200 as u16;
-            
-                        *((pma_base + 64 * 2 + 8) as *mut u16) = 0x0000 as u16;
-                        *((pma_base + 64 * 2 + 12) as *mut u16) = 0x4000 as u16;
-            
-                        // *((pma_base + 64 * 2 + 16) as *mut u16) = 0xffff as u16;
-                        // *((pma_base + 64 * 2 + 20) as *mut u16) = 0xffff as u16;
-            
-                        // *((pma_base + 64 * 2 + 24) as *mut u16) = 0x0001 as u16;
-                        // *((pma_base + 64 * 2 + 28) as *mut u16) = 0x0201 as u16;
-            
-                        // *((pma_base + 64 * 2 + 32) as *mut u16) = 0x0103 as u16;
+                    if buffer[3] == 0x01 {
+                        unsafe {
+                            *((pma_base + 64 * 2) as *mut u16) = 0x0112 as u16;
+                            *((pma_base + 64 * 2 + 4) as *mut u16) = 0x0200 as u16;
+                
+                            *((pma_base + 64 * 2 + 8) as *mut u16) = 0x0000 as u16;
+                            *((pma_base + 64 * 2 + 12) as *mut u16) = 0x4000 as u16;
+                
+                            *((pma_base + 64 * 2 + 16) as *mut u16) = 0xffff as u16;
+                            *((pma_base + 64 * 2 + 20) as *mut u16) = 0xffff as u16;
+                
+                            *((pma_base + 64 * 2 + 24) as *mut u16) = 0x0001 as u16;
+                            *((pma_base + 64 * 2 + 28) as *mut u16) = 0x0201 as u16;
+                
+                            *((pma_base + 64 * 2 + 32) as *mut u16) = 0x0103 as u16;
+        
+                            *((pma_base + 4) as *mut u16) = 0x12 as u16;
+                            // *((pma_base + 4) as *mut u16) = 0x4000 as u16;
+                        };
+                        usb.ep0r.write(0x0210);
+                        while usb.ep0r.get_bit(7) == 0 {};
     
-                        *((pma_base + 4) as *mut u16) = 0x08 as u16;
-                        // *((pma_base + 4) as *mut u16) = 0x4000 as u16;
-                    };
-                    usb.ep0r.write(0x0210);
-                    while usb.ep0r.get_bit(7) == 0 {};
-
-                    usb.ep0r.write(0x1200);
-                    while usb.ep0r.get_bit(15) == 0 {};
-
-                    usb.ep0r.write(0x1200);
+                        usb.ep0r.write(0x1200);
+                        while usb.ep0r.get_bit(15) == 0 {};
+    
+                        usb.ep0r.write(0x1200);
+                    }
                 }
                 if (buffer[0] as u16) << 8 | buffer[1] as u16 == 0x0005 {
 
@@ -152,13 +154,6 @@ fn main() -> ! {
                     while usb.ep0r.get_bit(7) == 0 {};
                     usb.daddr.write(device_address as u32);
                     usb.ep0r.write(0x5200);
-
-
-                    dbgr.send("Address transmitted");
-                    dbgr.send_byte(((usb.ep0r.read() & (0xFF << 8)) >> 8) as u8);
-                    dbgr.send_byte(((usb.ep0r.read()) & 0xFF) as u8);
-                    dbgr.send_byte(((usb.daddr.read()) & 0xFF) as u8);
-                    dbgr.send("_______________________\r\n");
                 }
             }
 
