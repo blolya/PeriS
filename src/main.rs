@@ -68,6 +68,8 @@ fn main() -> ! {
         *((pma_base + 12) as *mut u32) = 0x8400;
     }
 
+    let mut device_address = 0;
+
     loop {
 
         // correct transfer interrupt handler
@@ -127,20 +129,36 @@ fn main() -> ! {
                         // *((pma_base + 4) as *mut u16) = 0x4000 as u16;
                     };
                     usb.ep0r.write(0x0210);
-
                     while usb.ep0r.get_bit(7) == 0 {};
+
                     usb.ep0r.write(0x1200);
-    
                     while usb.ep0r.get_bit(15) == 0 {};
+
                     usb.ep0r.write(0x1200);
                 }
                 if (buffer[0] as u16) << 8 | buffer[1] as u16 == 0x0005 {
-    
+
                     dbgr.send("Set address request");
                     dbgr.send_byte(((usb.ep0r.read() & (0xFF << 8)) >> 8) as u8);
                     dbgr.send_byte(((usb.ep0r.read()) & 0xFF) as u8);
                     dbgr.send("_______________________\r\n");
-    
+
+                    device_address = buffer[2] | 128;
+
+                    unsafe {
+                        *((pma_base + 4) as *mut u16) = 0x00 as u16;
+                    };
+                    usb.ep0r.write(0x0210);
+                    while usb.ep0r.get_bit(7) == 0 {};
+                    usb.daddr.write(device_address as u32);
+                    usb.ep0r.write(0x5200);
+
+
+                    dbgr.send("Address transmitted");
+                    dbgr.send_byte(((usb.ep0r.read() & (0xFF << 8)) >> 8) as u8);
+                    dbgr.send_byte(((usb.ep0r.read()) & 0xFF) as u8);
+                    dbgr.send_byte(((usb.daddr.read()) & 0xFF) as u8);
+                    dbgr.send("_______________________\r\n");
                 }
             }
 
