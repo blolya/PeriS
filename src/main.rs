@@ -175,24 +175,17 @@ fn main() -> ! {
 
                             *((pma_base + 64 * 2 + 80) as *mut u16) = 0x0020 as u16;
 
-                            *((pma_base + 4) as *mut u16) = size as u16;
+                            *((pma_base + 4) as *mut u16) = 0x29 as u16;
                         };
                         usb.ep0r.write(0x0210);
                         while usb.ep0r.get_bit(7) == 0 {};
     
                         usb.ep0r.write(0x1200);
-                        while usb.ep0r.get_bit(15) == 0 {};
-    
-                        dbgr.send("Set config register");
-                        dbgr.send_byte(((usb.ep0r.read() & (0xFF << 8)) >> 8) as u8);
-                        dbgr.send_byte(((usb.ep0r.read()) & 0xFF) as u8);
-                        dbgr.send("_______________________\r\n");
-                        usb.ep0r.write(0x1200);
                     }
                 }
                 if (buffer[0] as u16) << 8 | buffer[1] as u16 == 0x0005 {
 
-                    device_address = buffer[2] | 128;
+                    device_address = buffer[2] | 0x80;
 
                     unsafe {
                         *((pma_base + 4) as *mut u16) = 0x00 as u16;
@@ -200,7 +193,7 @@ fn main() -> ! {
                     usb.ep0r.write(0x0210);
                     while usb.ep0r.get_bit(7) == 0 {};
                     usb.daddr.write(device_address as u32);
-                    usb.ep0r.write(0x5200);
+                    usb.ep0r.write(0x1200);
                 }
             }
 
