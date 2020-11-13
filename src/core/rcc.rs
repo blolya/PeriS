@@ -4,6 +4,7 @@ pub struct Rcc {
     pub cr: Register,
     pub cfgr: Register,
     pub apb2enr: Register,
+    pub apb1enr: Register,
 }
 impl Rcc {
     pub fn new() -> Rcc {
@@ -12,6 +13,7 @@ impl Rcc {
             cr: Register::new(address),
             cfgr: Register::new(address + 0x04),
             apb2enr: Register::new(address + 0x18),
+            apb1enr: Register::new(address + 0x1c),
         }
     }
 
@@ -131,6 +133,20 @@ impl Rcc {
     }
     pub fn disable_usart1(&self) {
         self.apb2enr.reset_bit(14);
+    }
+
+    // Usb
+    pub fn enable_usb(&self) {
+        self.apb1enr.set_bit(23);
+    }
+    pub fn disable_usb(&self) {
+        self.apb1enr.reset_bit(23);
+    }
+    pub fn set_usb_prescaler(&self, prescaler: u32) {
+        self.cfgr.write( (self.cfgr.read() & !(0b1 << 22)) | ((prescaler & 0b1) << 22) );
+    }
+    pub fn get_usb_prescaler(&self) -> u32 {
+        (self.cfgr.read() >> 22) & 0b1
     }
 }
 
