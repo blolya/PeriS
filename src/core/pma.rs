@@ -1,5 +1,5 @@
 
-struct Pma {
+pub struct Pma {
     pma_cell: PmaCell,
 }
 impl Pma {
@@ -48,7 +48,7 @@ impl DerefMut for Pma {
         &mut self.pma_cell
     }
 }
-struct PmaCell {
+pub struct PmaCell {
     len: usize,
     address: usize,
 }
