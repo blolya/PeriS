@@ -1,7 +1,7 @@
 use crate::core::register::Register;
 
 pub struct Nvic {
-    iser0: Register,
+    pub iser0: Register,
 }
 impl Nvic {
     pub fn new() -> Nvic {
