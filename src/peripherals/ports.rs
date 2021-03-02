@@ -10,6 +10,13 @@ impl<'a> Port<'a> {
         port.set_mode(port_mode);
         port
     }
+    pub fn toggle(&self) {
+        if self.get_output() == 0 {
+            self.set_high();
+        } else {
+            self.set_low();
+        }
+    }
     pub fn set_high(&self) {
         let port_mode = self.get_mode();
         let port_num: u32 = (&self.port_num).into();
@@ -45,6 +52,12 @@ impl<'a> Port<'a> {
 
         let port_mode: PortMode = (gpio_config, gpio_mode, gpio_odr).into();
         port_mode
+    }
+    pub fn get_input(&self) -> u32 {
+        self.gpio.get_port_input( (&self.port_num).into() )
+    }
+    pub fn get_output(&self) -> u32 {
+        self.gpio.get_port_output( (&self.port_num).into() )
     }
 }
 
