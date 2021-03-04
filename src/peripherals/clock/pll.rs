@@ -123,7 +123,7 @@ impl Pll {
     pub fn get_input_frequency(&self) -> u32 {
         let clock_source = self.get_clock_source();
         match clock_source {
-            PllClockSource::Hsi => Hsi::new().get_output_frequency(),
+            PllClockSource::Hsi => Hsi::new().get_output_frequency() / 2,
             PllClockSource::Hse => Hse::new().get_output_frequency() / self.get_hse_prescaler() as u32,
         }
     }
