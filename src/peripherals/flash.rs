@@ -34,8 +34,11 @@ impl Flash {
         flash.unselect_programming();
 
     }
-    fn read(address: u32, buffer: &[u16]) {
-
+    pub fn read(&self, address: usize, buffer: &mut [u16]) {
+        let buffer_len = buffer.len();
+        for buffer_index in 0 .. buffer_len {
+            buffer[buffer_index] = self[address + buffer_index * 2];
+        }
     }
 }
 
