@@ -27,4 +27,26 @@ impl Flash {
     pub fn set_latency(&self, latency: u32) {
         self.acr.write_or( (self.acr.read() & !0x7) | latency );
     }
+    pub fn get_cr_lock(&self) -> u32 {
+        self.cr.get_bit(7)
+    }
+    pub fn unlock_cr(&self) {
+        self.keyr.write(0x45670123);
+        self.keyr.write(0xcdef89ab);
+    }
+    pub fn get_sr_bsy(&self) -> u32 {
+        self.sr.get_bit(0)
+    }
+    pub fn get_eop(&self) -> u32 {
+        self.sr.get_bit(5)
+    }
+    pub fn reset_eop(&self) {
+        self.sr.set_bit(5);
+    }
+    pub fn select_programming(&self) {
+        self.cr.set_bit(0);
+    }
+    pub fn unselect_programming(&self) {
+        self.cr.reset_bit(0);
+    }
 }
