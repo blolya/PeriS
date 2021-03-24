@@ -5,7 +5,7 @@ use cortex_m_rt::entry;
 use panic_reset as _;
 
 use peris::peripherals::{
-    flash::Flash,
+    fprom::Fprom,
     communication::uart::usart1::Usart1,
     clock,
     ports::{
@@ -25,19 +25,21 @@ fn main() -> ! {
 
     let gpioc = Gpioc::new();
     let pc13 = Port::new(PortNum::P13, PortMode::Output( OutputConfig::GeneralPurposePushPull(MaxSpeed::S2MHz) ), &gpioc);
-    // pc13.set_high();
-    let mut flash = Flash::new();
-    // flash.write(0x0001_8314, &[0x1111, 0x2222, 0x3333, 0x4444, 0x0000]);
-    let mut buffer: [u16; 5] = [0x0000, 0x0000, 0x0000, 0x0000, 0x0000];
-    flash.read(0x0001_830a, &mut buffer);
+    pc13.set_high();
+    // let mut flash = Flash::new();
+    // // flash.write(0x0001_8314, &[0x1111, 0x2222, 0x3333, 0x4444, 0x0000]);
+    let mut buffer: [u16; 1] = [0xcccc];
+    // flash.read(0x0001_830a, &mut buffer);
 
-    if buffer[2] == 0x3323 {
-        pc13.set_low();
-    } else {
-        pc13.set_high();
-    }
+    // if buffer[2] == 0x3323 {
+    //     pc13.set_low();
+    // } else {
+    //     pc13.set_high();
+    // }
 
+    let mut fprom = Fprom::new(0x0001_8300);
+    fprom.write(&buffer);
 
-
+    pc13.set_low();
     loop {}
 }

@@ -40,6 +40,9 @@ impl Flash {
             buffer[buffer_index] = self[address + buffer_index * 2];
         }
     }
+    pub fn clear_page(&self, page_address: usize) {
+
+    }
 }
 
 use core::ops::{Deref, DerefMut};
@@ -59,6 +62,7 @@ impl DerefMut for Flash {
 pub struct FlashCell {
     len: usize,
     address: usize,
+    page_size: usize,
 }
 
 impl FlashCell {
@@ -66,6 +70,7 @@ impl FlashCell {
         FlashCell {
             len: 131072,
             address: 0x0800_0000,
+            page_size: 1024,
         }
     }
 }
