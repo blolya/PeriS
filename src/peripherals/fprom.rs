@@ -1,3 +1,5 @@
+use core::cell;
+
 use super::flash::Flash;
 
 pub struct Fprom {
@@ -16,7 +18,7 @@ impl Fprom {
         }
     }
 
-    fn get_start_address(&self, buffer_len: usize) -> usize {
+    fn get_write_address(&self, buffer_len: usize) -> usize {
         let mut empty_cell_counter = 0;
         let mut first_empty_cell_address = self.address;
         let mut cell_address = first_empty_cell_address;
@@ -48,14 +50,43 @@ impl Fprom {
         first_empty_cell_address
     }
 
+    pub fn get_read_address(&self, buffer_len: usize) -> usize {
+        
+        let mut non_empty_cell_counter = 0;
+        let mut first_non_empty_cell_address = self.address + self.pages_num * self.page_size;
+        let mut cell_address = first_non_empty_cell_address;
+        
+        while non_empty_cell_counter == 0 {
+
+            if self.flash[cell_address] != 0xffff {
+                first_non_empty_cell_address = cell_address - buffer_len;
+                non_empty_cell_counter = 1;
+            }
+
+            cell_address -= 2;
+
+            if cell_address <= self.address + buffer_len {
+                non_empty_cell_counter = 1;
+                first_non_empty_cell_address = cell_address;
+            }
+        }
+
+        first_non_empty_cell_address
+
+    }
+
     pub fn write(&mut self, buffer: &[u16]) {
         
-        let address = self.get_start_address(buffer.len());
+        let address = self.get_write_address(buffer.len());
 
         self.flash.write(address, buffer);
 
     }
-    fn read(&self, buffer: &[u16]) {}
+    pub fn read(&self, buffer: &mut [u16]) {
+
+        let address = self.get_read_address(buffer.len());
+        self.flash.read(address, buffer);
+    }
 }
 
 // use core::ops::{Deref, DerefMut};

@@ -28,7 +28,7 @@ fn main() -> ! {
     pc13.set_high();
     // let mut flash = Flash::new();
     // // flash.write(0x0001_8314, &[0x1111, 0x2222, 0x3333, 0x4444, 0x0000]);
-    let mut buffer: [u16; 1] = [0xcccc];
+    let mut buffer: [u16; 2] = [0x0000, 0x0000];
     // flash.read(0x0001_830a, &mut buffer);
 
     // if buffer[2] == 0x3323 {
@@ -38,8 +38,14 @@ fn main() -> ! {
     // }
 
     let mut fprom = Fprom::new(0x0001_8300);
-    fprom.write(&buffer);
+    fprom.read(&mut buffer);
 
-    pc13.set_low();
+    if buffer[1] == 0xcccc {
+
+        pc13.set_low();
+    }
+    else {
+        pc13.set_high();
+    }
     loop {}
 }
