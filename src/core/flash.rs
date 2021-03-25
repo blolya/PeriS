@@ -24,6 +24,9 @@ impl Flash {
             wrpr: Register::new(address + 0x20),
         }
     }
+    pub fn start_erase(&self) {
+        self.cr.set_bit(6);
+    }
     pub fn set_latency(&self, latency: u32) {
         self.acr.write_or( (self.acr.read() & !0x7) | latency );
     }
@@ -34,6 +37,9 @@ impl Flash {
         self.keyr.write(0x45670123);
         self.keyr.write(0xcdef89ab);
     }
+    pub fn set_address(&self, address: u32) {
+        self.ar.write(address);
+    }
     pub fn get_sr_bsy(&self) -> u32 {
         self.sr.get_bit(0)
     }
@@ -42,6 +48,12 @@ impl Flash {
     }
     pub fn reset_eop(&self) {
         self.sr.set_bit(5);
+    }
+    pub fn select_page_erase(&self) {
+        self.cr.set_bit(1);
+    }
+    pub fn unselect_page_erase(&self) {
+        self.cr.reset_bit(1);
     }
     pub fn select_programming(&self) {
         self.cr.set_bit(0);

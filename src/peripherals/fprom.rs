@@ -36,7 +36,7 @@ impl Fprom {
             if cell_address >= self.address + self.pages_num * self.page_size {
 
                 for page_num in 0..self.pages_num {
-                    self.flash.clear_page(self.address + page_num * self.page_size);
+                    self.flash.erase_page(self.address + page_num * self.page_size);
                 }
 
                 empty_cell_counter = 0;

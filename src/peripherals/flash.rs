@@ -20,7 +20,9 @@ impl Flash {
         while flash.get_cr_lock() == 1 {};
     
         while flash.get_sr_bsy() == 1 {};
-        flash.reset_eop();
+        if flash.get_eop() == 1 {
+            flash.reset_eop();
+        }
     
         flash.select_programming();
 
@@ -40,8 +42,25 @@ impl Flash {
             buffer[buffer_index] = self[address + buffer_index * 2];
         }
     }
-    pub fn clear_page(&self, page_address: usize) {
+    pub fn erase_page(&self, page_address: usize) {
+        let flash = CoreFlash::new();
 
+        if flash.get_cr_lock() == 1 {
+            flash.unlock_cr();
+        }
+        while flash.get_cr_lock() == 1 {};
+    
+        while flash.get_sr_bsy() == 1 {};
+        if flash.get_eop() == 1 {
+            flash.reset_eop();
+        }
+    
+        flash.select_page_erase();
+        flash.set_address(page_address as u32);
+        flash.start_erase();
+        while flash.get_eop() == 0 {};
+        flash.reset_eop();
+        flash.unselect_page_erase();
     }
 }
 
