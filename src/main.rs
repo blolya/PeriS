@@ -9,5 +9,6 @@ use peris::peripherals::clock;
 #[entry]
 fn main() -> ! {
     clock::init();
+
     loop {}
 }
