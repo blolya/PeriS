@@ -2,11 +2,11 @@ use super::register::Register;
 
 pub struct Flash {
     acr: Register,
-    pub keyr: Register,
+    keyr: Register,
     optkeyr: Register,
-    pub sr: Register,
-    pub cr: Register,
-    pub ar: Register,
+    sr: Register,
+    cr: Register,
+    ar: Register,
     obr: Register,
     wrpr: Register,
 }
