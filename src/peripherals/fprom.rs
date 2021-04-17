@@ -4,7 +4,7 @@ use super::flash::Flash;
 
 pub struct Fprom {
     address: usize,
-    flash: Flash,
+    pub flash: Flash,
     pages_num: usize,
     page_size: usize,
 }
@@ -13,7 +13,7 @@ impl Fprom {
         Fprom {
             address,
             flash: Flash::new(),
-            pages_num: 2,
+            pages_num: 3,
             page_size: 1024,
         }
     }
@@ -35,10 +35,10 @@ impl Fprom {
             }
         
             cell_address += 2;
-            if cell_address >= self.address + self.pages_num * self.page_size {
+            if cell_address >= self.address + self.pages_num * self.page_size - buffer_len {
 
                 for page_num in 0..self.pages_num {
-                    self.flash.erase_page(self.address + page_num * self.page_size);
+                    // self.flash.erase_page( self.address + page_num * self.page_size);
                 }
 
                 empty_cell_counter = 0;

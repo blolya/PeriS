@@ -1,5 +1,6 @@
 use super::super::core::flash::Flash as CoreFlash;
 
+use crate::peripherals::ports::Port;
 pub struct Flash {
     flash_cell: FlashCell,
 }
@@ -42,23 +43,25 @@ impl Flash {
             buffer[buffer_index] = self[address + buffer_index * 2];
         }
     }
-    pub fn erase_page(&self, page_address: usize) {
+    pub fn erase_page(&self, page_address: usize, pc13: &Port) {
         let flash = CoreFlash::new();
 
         if flash.get_cr_lock() == 1 {
             flash.unlock_cr();
         }
         while flash.get_cr_lock() == 1 {};
-    
+        
         while flash.get_sr_bsy() == 1 {};
         if flash.get_eop() == 1 {
             flash.reset_eop();
         }
-    
+        
         flash.select_page_erase();
-        flash.set_address(page_address as u32);
+        
+        flash.set_address((self.address + page_address) as u32);
         flash.start_erase();
         while flash.get_eop() == 0 {};
+        pc13.set_low();
         flash.reset_eop();
         flash.unselect_page_erase();
     }
