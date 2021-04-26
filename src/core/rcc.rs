@@ -135,6 +135,14 @@ impl Rcc {
         self.apb2enr.reset_bit(14);
     }
 
+    // i2c
+    pub fn enable_i2c1(&self) {
+        self.apb1enr.set_bit(21);
+    }
+    pub fn disable_i2c1(&self) {
+        self.apb1enr.reset_bit(21);
+    }
+
     // Usb
     pub fn enable_usb(&self) {
         self.apb1enr.set_bit(23);
